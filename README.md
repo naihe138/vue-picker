@@ -8,6 +8,10 @@ a picker componemt for vue2.0
 
 #### demo
 
+[exampleCode：https://github.com/naihe138/vue-picker/blob/master/arearSelect/demo.vue][2]
+
+[demo 地址：http://gitblog.naice.me/vue-picker/arearSelect/index.html][3]
+
 #### install
 
 `npm install vue-pickers --save`
@@ -185,10 +189,10 @@ pickData3: {
 },
 ```
 
-demo 地址：
-
 
 
 
 
   [1]: http://img.store.naice.me/vue-pick.gif
+  [2]: https://github.com/naihe138/vue-picker/blob/master/arearSelect/demo.vue
+  [3]: http://gitblog.naice.me/vue-picker/arearSelect/index.html
