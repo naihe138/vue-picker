@@ -190,9 +190,6 @@ pickData3: {
 ```
 
 
-
-
-
   [1]: http://img.store.naice.me/vue-pick.gif
   [2]: https://github.com/naihe138/vue-picker/blob/master/arearSelect/demo.vue
   [3]: http://gitblog.naice.me/vue-picker/arearSelect/index.html
