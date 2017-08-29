@@ -4,55 +4,55 @@
 * @date 2017/7/10
 */
 <template>
-	<div id="">
-		<div class="area_ctrl" :class="show ? 'slideInUp' : 'slideInDown'">
-			<div class="area_btn_box">
-				<div class="area_btn larea_cancel" @click="close">取消</div>
-				<div class="area_btn larea_finish" @click="finish">确定</div>
-			</div>
-			<div class="area_roll_mask">
-				<div class="area_roll">
-					<div>
-						<div top="0" class="gear area_province"
-								 data-areatype="area_province"
-								 data-type="provs"
-								 :data-len="pData1.length"
-								 val="5"
-								 @touchstart="gearTouchStart"
-								 @touchmove="gearTouchMove"
-								 @touchend="gearTouchEnd">
-							<div class="tooth" v-for="item in pData1">{{item.text}}</div>
-						</div>
-						<div class="area_grid">
-						</div>
-					</div>
-					<div v-if="selectData.columns > 1">
-						<div class="gear area_city" top="0" data-areatype="area_city" data-type="city"
-								 :data-len="pData2.length"
-								 @touchstart="gearTouchStart"
-								 @touchmove="gearTouchMove"
-								 @touchend="gearTouchEnd"
-								 val="5">
-							<div class="tooth" v-for="item in pData2">{{item.text}}</div>
-						</div>
-						<div class="area_grid">
-						</div>
-					</div>
-					<div v-if="selectData.columns > 2">
-						<div class="gear area_county" top="0" data-areatype="area_county" :data-len="pData3.length"
-								 @touchstart="gearTouchStart"
-								 @touchmove="gearTouchMove"
-								 @touchend="gearTouchEnd"
-								 val="5">
-							<div class="tooth" v-for="item in pData3">{{item.text}}</div>
-						</div>
-						<div class="area_grid">
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+  <div id="">
+    <div class="area_ctrl" :class="show ? 'slideInUp' : 'slideInDown'">
+      <div class="area_btn_box">
+        <div class="area_btn larea_cancel" @click="close">取消</div>
+        <div class="area_btn larea_finish" @click="finish">确定</div>
+      </div>
+      <div class="area_roll_mask">
+        <div class="area_roll">
+          <div>
+            <div top="0" class="gear area_province"
+                 data-areatype="area_province"
+                 data-type="provs"
+                 :data-len="pData1.length"
+                 val="5"
+                 @touchstart="gearTouchStart"
+                 @touchmove="gearTouchMove"
+                 @touchend="gearTouchEnd">
+              <div class="tooth" v-for="item in pData1">{{item.text}}</div>
+            </div>
+            <div class="area_grid">
+            </div>
+          </div>
+          <div v-if="selectData.columns > 1">
+            <div class="gear area_city" top="0" data-areatype="area_city" data-type="city"
+                 :data-len="pData2.length"
+                 @touchstart="gearTouchStart"
+                 @touchmove="gearTouchMove"
+                 @touchend="gearTouchEnd"
+                 val="5">
+              <div class="tooth" v-for="item in pData2">{{item.text}}</div>
+            </div>
+            <div class="area_grid">
+            </div>
+          </div>
+          <div v-if="selectData.columns > 2">
+            <div class="gear area_county" top="0" data-areatype="area_county" :data-len="pData3.length"
+                 @touchstart="gearTouchStart"
+                 @touchmove="gearTouchMove"
+                 @touchend="gearTouchEnd"
+                 val="5">
+              <div class="tooth" v-for="item in pData3">{{item.text}}</div>
+            </div>
+            <div class="area_grid">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -61,12 +61,12 @@
     props: {
       show: {
         type: Boolean,
-				default: false
-			},
+        default: false
+      },
       selectData: {
         type: Object,
         default: {}
-			}
+      }
     },
     data () {
       return {
@@ -77,7 +77,8 @@
           select1: '',
           select2: '',
           select3: ''
-        }
+        },
+        noData: false
       }
     },
     methods: {
@@ -144,7 +145,9 @@
             break;
           }
         }
-        var flag = (target["new_" + target.id] - target["old_" + target.id]) / (target["n_t_" + target.id] - target["o_t_" + target.id]);
+        var flag = (
+                   target["new_" + target.id] - target["old_" + target.id]) / (
+                   target["n_t_" + target.id] - target["o_t_" + target.id]);
         if (Math.abs(flag) <= 0.2) {
           target["spd_" + target.id] = (
             flag < 0 ? -0.08 : 0.08);
@@ -207,7 +210,7 @@
         var _self = this
         var endVal = Math.round(val);
         var type = target.getAttribute('data-type')
-				// 不是联级
+        // 不是联级
         if (!this.selectData.link) {
           if (type === 'provs') {
             _self.selects.select1 = _self.pData1[endVal]
@@ -216,28 +219,31 @@
           } else {
             _self.selects.select3 = _self.pData3[endVal]
           }
-				} else {
-					if (type === 'provs') {
-						_self.selects.select1 = _self.pData1[endVal]
-						_self.resetData2(endVal)
-						if (this.selectData.columns === 3) {
+        } else {
+          if (type === 'provs') {
+            _self.selects.select1 = _self.pData1[endVal]
+            _self.resetData2(endVal)
+            if (this.selectData.columns === 3) {
               _self.resetData3(0)
-						}
-					} else if (type === 'city' && this.selectData.columns === 3) {
-						_self.resetData3(endVal)
+            }
+          } else if (type === 'city' && this.selectData.columns === 2) {
             this.selects.select2 = this.pData2[endVal]
-					} else if (this.selectData.columns === 3){
-						this.selects.select3 = this.pData3[endVal]
-					}
+          } else if (type === 'city' && this.selectData.columns === 3) {
+            _self.resetData3(endVal)
+            this.selects.select2 = this.pData2[endVal]
+          } else if (this.selectData.columns === 3) {
+            this.selects.select3 = this.pData3[endVal]
+          }
         }
       },
       resetData2(endVal) {
         var city = document.querySelector('.area_city')
         if (this.selectData.pData2[this.pData1[endVal].value]) {
           this.pData2 = this.selectData.pData2[this.pData1[endVal].value]
-				} else {
+        } else {
           this.pData2 = []
-				}
+        }
+        this.selects.select2 = this.pData2[0]
         city.setAttribute('top', 0);
         city.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
       },
@@ -245,38 +251,42 @@
         var county = document.querySelector('.area_county')
         if (this.pData2.length > 0 && this.pData2[endVal]) {
           this.pData3 = this.selectData.pData3[this.pData2[endVal].value]
-				} else {
+        } else {
           this.pData3 = []
         }
+        this.selects.select3 = this.pData3[0]
         county.setAttribute('top', 0);
         county.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
+      },
+      init() {
+        if (!this.selectData.link) {
+          this.pData1 = this.selectData.pData1;
+          this.pData2 = this.selectData.pData2;
+          this.pData3 = this.selectData.pData3;
+        } else {
+          this.pData1 = this.selectData.pData1;
+          this.pData2 = this.selectData.pData2[this.pData1[0].value]
+          if (this.selectData.columns === 3) {
+            this.pData3 = this.selectData.pData3[this.pData2[0].value]
+          }
+        }
+        this.selects.select1 = this.pData1[0]
+        if (this.selectData.columns === 2) {
+          this.selects.select2 = this.pData2[0]
+        } else if (this.selectData.columns === 3) {
+          this.selects.select2 = this.pData2[0]
+          this.selects.select3 = this.pData3[0]
+        }
       }
     },
     created() {
-			if (!this.selectData.link) {
-        this.pData1 = this.selectData.pData1;
-        this.pData2 = this.selectData.pData2;
-        this.pData3 = this.selectData.pData3;
-			} else {
-        this.pData1 = this.selectData.pData1;
-        this.pData2 = this.selectData.pData2[this.pData1[0].value]
-				if (this.selectData.columns === 3) {
-          this.pData3 = this.selectData.pData3[this.pData2[0].value]
-				}
-			}
-      this.selects.select1 = this.pData1[0]
-      if (this.selectData.columns === 2) {
-        this.selects.select2 = this.pData2[this.pData1[0].value]
-      } else if (this.selectData.columns === 3) {
-        this.selects.select2 = this.pData2[0]
-        this.selects.select3 = this.pData3[0]
-      }
+      this.init()
     }
   }
 </script>
 
 <style scoped>
-	.area_ctrl {
-		font-size: 12px;
-	}
+  .area_ctrl {
+    font-size: 12px;
+  }
 </style>

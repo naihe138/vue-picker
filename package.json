@@ -1,6 +1,6 @@
 {
-  "name": "vue-picker",
-  "version": "1.0.0",
+  "name": "vue-pickers",
+  "version": "1.0.1",
   "description": "a picker componemt for vue2.0",
   "main": "index.js",
   "scripts": {
@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/naihe138/vue-picker/issues"
   },
-  "homepage": "https://github.com/naihe138/vue-picker#readme"
+  "homepage": "https://github.com/naihe138/vue-picker#readme",
+  "directories": {
+    "lib": "lib"
+  }
 }
