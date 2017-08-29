@@ -1,0 +1,23 @@
+{
+  "name": "vue-picker",
+  "version": "1.0.0",
+  "description": "a picker componemt for vue2.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/naihe138/vue-picker.git"
+  },
+  "keywords": [
+    "vue2.0",
+    "vue-picker"
+  ],
+  "author": "naice",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/naihe138/vue-picker/issues"
+  },
+  "homepage": "https://github.com/naihe138/vue-picker#readme"
+}
