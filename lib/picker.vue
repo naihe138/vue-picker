@@ -281,6 +281,14 @@
     },
     created() {
       this.init()
+    },
+    watch: {
+      selectData: {
+        handler: function () {
+          this.init()
+        },
+        deep: true
+      }
     }
   }
 </script>
