@@ -53,7 +53,7 @@ components: {
     </tr>
     <tr>
         <td>selectData</td>
-        <td>Array</td>
+        <td>Object</td>
         <td>picker 的数据</td>
         <td>Yes</td>
     </tr>
