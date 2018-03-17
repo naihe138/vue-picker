@@ -4,56 +4,69 @@
 * @date 2017/7/10
 */
 <template>
-  <div id="">
-		<transition name="fade">
-			<div class="area_ctrl" v-if="show">
-				<div class="area_btn_box">
-					<div class="area_btn larea_cancel" @click="close">取消</div>
-					<div class="area_btn larea_finish" @click="finish">确定</div>
-				</div>
-				<div class="area_roll_mask">
-					<div class="area_roll">
-						<div>
-							<div top="0" class="gear area_province"
-									data-areatype="area_province"
-									data-type="provs"
-									:data-len="pData1.length"
-									val="5"
-									@touchstart="gearTouchStart"
-									@touchmove="gearTouchMove"
-									@touchend="gearTouchEnd">
-								<div class="tooth" v-for="item in pData1">{{item.text}}</div>
-							</div>
-							<div class="area_grid">
-							</div>
-						</div>
-						<div v-if="selectData.columns > 1">
-							<div class="gear area_city" top="0" data-areatype="area_city" data-type="city"
-									:data-len="pData2.length"
-									@touchstart="gearTouchStart"
-									@touchmove="gearTouchMove"
-									@touchend="gearTouchEnd"
-									val="5">
-								<div class="tooth" v-for="item in pData2">{{item.text}}</div>
-							</div>
-							<div class="area_grid">
-							</div>
-						</div>
-						<div v-if="selectData.columns > 2">
-							<div class="gear area_county" top="0" data-areatype="area_county" :data-len="pData3.length"
-									@touchstart="gearTouchStart"
-									@touchmove="gearTouchMove"
-									@touchend="gearTouchEnd"
-									val="5">
-								<div class="tooth" v-for="item in pData3">{{item.text}}</div>
-							</div>
-							<div class="area_grid">
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</transition>
+  <div id="h-picker">
+    <transition name="fade">
+      <div class="area_ctrl" v-if="show">
+        <div class="area_btn_box">
+          <div class="area_btn larea_cancel" @click="close">取消</div>
+          <div class="area_btn larea_finish" @click="finish">确定</div>
+        </div>
+        <div class="area_roll_mask">
+          <div class="area_roll">
+            <div>
+              <div top="0"
+                  ref="province" 
+                  class="gear area_province"
+                  data-areatype="area_province"
+                  data-type="provs"
+                  :data-len="pData1.length"
+                  val="5"
+                  @touchstart="gearTouchStart"
+                  @touchmove="gearTouchMove"
+                  @touchend="gearTouchEnd">
+                <div class="tooth" v-for="(item,index) in pData1" :key="index">{{item.text}}</div>
+              </div>
+              <div class="area_grid">
+              </div>
+            </div>
+            <div v-if="selectData.columns > 1">
+              <div 
+                  class="gear area_city" 
+                  top="0" 
+                  ref="city"
+                  data-areatype="area_city" 
+                  data-type="city"
+                  :data-len="pData2.length"
+                  @touchstart="gearTouchStart"
+                  @touchmove="gearTouchMove"
+                  @touchend="gearTouchEnd"
+                  val="5">
+                <div class="tooth" v-for="(item,index) in pData2" :key="index">{{item.text}}</div>
+              </div>
+              <div class="area_grid">
+              </div>
+            </div>
+            <div v-if="selectData.columns > 2">
+              <div 
+                  class="gear 
+                  area_county" 
+                  top="0"
+                  ref="county"
+                  data-areatype="area_county" 
+                  :data-len="pData3.length"
+                  @touchstart="gearTouchStart"
+                  @touchmove="gearTouchMove"
+                  @touchend="gearTouchEnd"
+                  val="5">
+                <div class="tooth" v-for="(item,index) in pData3" :key="index">{{item.text}}</div>
+              </div>
+              <div class="area_grid">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
     
   </div>
 </template>
@@ -104,8 +117,7 @@
         }
         clearInterval(target["int_" + target.id]);
         target["old_" + target.id] = e.targetTouches[0].screenY;
-        target["o_t_" + target.id] = (
-          new Date()).getTime();
+        target["o_t_" + target.id] = (new Date()).getTime();
         var top = target.getAttribute('top');
         if (top) {
           target["o_d_" + target.id] = parseFloat(top.replace(/em/g, ""));
@@ -128,8 +140,7 @@
         target["new_" + target.id] = e.targetTouches[0].screenY;
         target["n_t_" + target.id] = (
           new Date()).getTime();
-        var f = (
-                target["new_" + target.id] - target["old_" + target.id]) * 30 / window.innerHeight;
+        var f = (target["new_" + target.id] - target["old_" + target.id]) * 30 / window.innerHeight;
         target["pos_" + target.id] = target["o_d_" + target.id] + f;
         target.style["-webkit-transform"] = 'translate3d(0,' + target["pos_" + target.id] + 'em,0)';
         target.setAttribute('top', target["pos_" + target.id] + 'em');
@@ -147,8 +158,7 @@
             break;
           }
         }
-        var flag = (target["new_" + target.id] - target["old_" + target.id]) / (
-                   target["n_t_" + target.id] - target["o_t_" + target.id]);
+        var flag = (target["new_" + target.id] - target["old_" + target.id]) / (target["n_t_" + target.id] - target["o_t_" + target.id]);
         if (Math.abs(flag) <= 0.2) {
           target["spd_" + target.id] = (
             flag < 0 ? -0.08 : 0.08);
@@ -190,8 +200,7 @@
             pos = 0;
             setDuration();
           }
-          var minTop = -(
-            target.dataset.len - 1) * 2;
+          var minTop = -(target.dataset.len - 1) * 2;
           if (pos < minTop) {
             pos = minTop;
             setDuration();
@@ -237,27 +246,74 @@
           }
         }
       },
+      setTop(defaultData) {
+        this.$nextTick(()=> {
+          var province = this.$refs.province
+          var city = this.$refs.city
+          var county = this.$refs.county
+          var pos1 = 0
+          var pos2 = 0
+          var pos3 = 0
+          if (defaultData[0] && defaultData[0].value) {
+            this.selects.select1 = defaultData[0]
+            for (var i = 0, len = this.pData1.length; i < len; i++) {
+              if (this.pData1[i].value == defaultData[0].value) {
+                pos1 = -(i*2)
+                break
+              }
+            }
+            province.style.transform = province.style["-webkit-transform"] = 'translate3d(0,' + pos1 + 'em,0)';
+            province.setAttribute('top', pos1 + 'em');
+          }
+          if(defaultData[1] && defaultData[1].value) {
+            for (var i = 0, len = this.pData2.length; i < len; i++) {
+              if (this.pData2[i].value == defaultData[1].value) {
+                pos2 = -(i*2)
+                break
+              }
+            }
+            this.selects.select2 = defaultData[1]
+            city.setAttribute('top', pos2 + 'em');
+            city.style["-webkit-transform"] = 'translate3d(0,' + pos2 + 'em,0)';
+          }
+          if(defaultData[2] && defaultData[2].value) {
+            for (var i = 0, len = this.pData3.length; i < len; i++) {
+              if (this.pData3[i].value == defaultData[2].value) {
+                pos3 = -(i*2)
+                break
+              }
+            }
+            this.selects.select3 = defaultData[2]
+            county.setAttribute('top', pos3 + 'em');
+            county.style["-webkit-transform"] = 'translate3d(0,' + pos3 + 'em,0)';
+          }
+        })
+      },
       resetData2(endVal) {
-        var city = document.querySelector('.area_city')
-        if (this.selectData.pData2[this.pData1[endVal].value]) {
-          this.pData2 = this.selectData.pData2[this.pData1[endVal].value]
-        } else {
-          this.pData2 = []
-        }
-        this.selects.select2 = this.pData2[0]
-        city.setAttribute('top', 0);
-        city.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
+        this.$nextTick(()=> {
+          var city = this.$refs.city
+          if (this.pData1[endVal] && this.selectData.pData2[this.pData1[endVal].value]) {
+            this.pData2 = this.selectData.pData2[this.pData1[endVal].value]
+          } else {
+            this.pData2 = []
+          }
+          this.selects.select2 = this.pData2[0]
+          city.setAttribute('top', 0);
+          city.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
+        })
       },
       resetData3(endVal) {
-        var county = document.querySelector('.area_county')
-        if (this.pData2.length > 0 && this.pData2[endVal]) {
-          this.pData3 = this.selectData.pData3[this.pData2[endVal].value]
-        } else {
-          this.pData3 = []
-        }
-        this.selects.select3 = this.pData3[0]
-        county.setAttribute('top', 0);
-        county.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
+        this.$nextTick(()=> {
+          var county = this.$refs.county
+          if (this.pData2.length > 0 && this.pData2[endVal]) {
+            this.pData3 = this.selectData.pData3[this.pData2[endVal].value]
+          } else {
+            this.pData3 = []
+          }
+          this.selects.select3 = this.pData3[0]
+          county.setAttribute('top', 0);
+          county.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
+        })
       },
       init() {
         if (!this.selectData.link) {
@@ -265,16 +321,20 @@
           this.pData2 = this.selectData.pData2;
           this.pData3 = this.selectData.pData3;
         } else {
+          console.log(this.selectData)
           this.pData1 = this.selectData.pData1;
           this.pData2 = this.selectData.pData2[this.pData1[0].value]
           if (this.selectData.columns === 3) {
             this.pData3 = this.selectData.pData3[this.pData2[0].value]
           }
         }
-        this.selects.select1 = this.pData1[0]
-        if (this.selectData.columns === 2) {
+        if (this.selectData.columns === 1) {
+          this.selects.select1 = this.pData1[0]
+        } else if (this.selectData.columns === 2) {
+          this.selects.select1 = this.pData1[0]
           this.selects.select2 = this.pData2[0]
         } else if (this.selectData.columns === 3) {
+          this.selects.select1 = this.pData1[0]
           this.selects.select2 = this.pData2[0]
           this.selects.select3 = this.pData3[0]
         }
@@ -289,6 +349,9 @@
           this.init()
         },
         deep: true
+      },
+      show (val) {
+        val && this.setTop(this.selectData.default || [])
       }
     }
   }
@@ -312,7 +375,7 @@
 }
 
 .area_ctrl {
-	font-size: 12px;
+  font-size: 12px;
   vertical-align: middle;
   background-color: #d5d8df;
   color: #000;
