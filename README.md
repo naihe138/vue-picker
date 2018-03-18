@@ -78,6 +78,12 @@ components: {
 ```
 pickData1: {
   columns: 1, // picker的列数
+  default: [ // 默认显示哪一个字段
+    {
+      text: 2002,
+      value: 2002
+    }
+  ],
   // 第一列的数据结构
   pData1: [
     {
@@ -114,7 +120,17 @@ pickData1: {
 pickData2: {
   columns: 2, // 两列
   link: true, // 联级必须需要link 参数
-   // 第一列数据结构
+  default: [ // 默认显示那个字段
+    {
+      text: '水果',
+      value: 2001
+    },
+    {
+        text: '香蕉',
+        value: 105
+      },
+  ],
+   // 第一列数据结构
   pData1: [
     {
       text: '数码',
