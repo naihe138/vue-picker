@@ -97,5 +97,5 @@ cancel | 取消选择 | 否 | function | 无
 confirm | 确认选择  | 否 | function(val) | 无
 
 
-[1]: http://img.store.naice.me/vue-pick.gif
+[1]: http://img.store.naice.me/vue-picker22.gif
 [3]: http://gitblog.naice.me/vue-picker/example/index.html
