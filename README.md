@@ -8,207 +8,94 @@ a picker componemt for vue2.0
 
 #### demo
 
-
-[exampleCode：https://github.com/naihe138/vue-picker/blob/master/arearSelect/demo.vue][2]
-
-[demo 地址：http://gitblog.naice.me/vue-picker/arearSelect/index.html][3]
+[demo 地址：http://gitblog.naice.me/vue-picker/example/index.html][3]
 
 
 #### install
 
 `npm install vue-pickers --save`
 
+
 #### 使用
 
-```
-import VuePickers from 'vue-pickers'
+````javascript
 
-// components
-components: {
-  VuePickers
-}
+<template>
+  <div>
+    <vue-pickers
+      :show="show"
+      :columns="columns"
+      :defaultData="defaultData"
+      :selectData="pickData"
+      @cancel="close"
+      @confirm="confirmFn"></vue-pickers>
+  </div>
+</template>
 
-// template
-<vue-pickers :show="show1"
-    :selectData="pickData1"
-    v-on:cancel="close"
-    v-on:confirm="confirmFn"></vue-pickers>
-
-```
-
-#### 配置
-
-<table>
-    <tr>
-        <th>Param</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Required</th>
-    </tr>
-    <tr>
-        <td>show</td>
-        <td>blooean</td>
-        <td>The flag of images to view</td>
-        <td>Yes</td>
-    </tr>
-    <tr>
-        <td>selectData</td>
-        <td>Object</td>
-        <td>picker 的数据</td>
-        <td>Yes</td>
-    </tr>
-    <tr>
-        <td>cancel</td>
-        <td>function</td>
-        <td>取消按钮的回调函数</td>
-        <td>No</td>
-    </tr>
-    <tr>
-        <td>confirm</td>
-        <td>function</td>
-        <td>确定按钮的回调函数</td>
-        <td>No</td>
-    </tr>
-</table>
-
-#### 数据结构说明
-
-##### 例1普通的数据结构
-
-```
-pickData1: {
-  columns: 1, // picker的列数
-  default: [ // 默认显示哪一个字段
-    {
-      text: 2002,
-      value: 2002
+<script>
+import vuePickers from 'vue-pickers'
+export default {
+  components: {
+    vuePickers
+  },
+  data() {
+    return {
+      show: false,
+      columns: 1,
+      defaultData: [
+        {
+          text: 1999,
+          value: 1999
+        }
+      ],
+      pickData: {
+        // 第一列的数据结构
+        data1: [
+          {
+            text: 1999,
+            value: 1999
+          },
+          {
+            text: 2001,
+            value: 2001
+          }
+        ]
+      }
     }
-  ],
-  // 第一列的数据结构
-  pData1: [
-    {
-      text: 1999,
-      value: 1999
+  },
+  methods: {
+    close() {
+      this.show = false
     },
-    {
-      text: 2001,
-      value: 2001
+    confirmFn(val) {
+      this.show = false
+      this.defaultData = [val.select1]
     },
-    {
-      text: 2002,
-      value: 2002
-    },
-    {
-      text: 2003,
-      value: 2003
-    },
-    {
-      text: 2004,
-      value: 2004
-    },
-    {
-      text: 2005,
-      value: 2005
-    },
-  ]
-}
-```
-
-##### 例2联级数据结构
-
-```
-pickData2: {
-  columns: 2, // 两列
-  link: true, // 联级必须需要link 参数
-  default: [ // 默认显示那个字段
-    {
-      text: '水果',
-      value: 2001
-    },
-    {
-        text: '香蕉',
-        value: 105
-      },
-  ],
-   // 第一列数据结构
-  pData1: [
-    {
-      text: '数码',
-      value: 1999
-    },
-    {
-      text: '水果',
-      value: 2001
-    },
-    {
-      text: '衣服',
-      value: 2002
+    toShow() {
+      this.show = true
     }
-  ],
- // 第二列数据结构
-  pData2: {
-    '1999': [
-      {
-        text: '相机',
-        value: 101
-      },
-      {
-        text: '手机',
-        value: 102
-      },
-      {
-        text: '音箱',
-        value: 103
-      }
-    ],
-    '2001': [
-      {
-        text: '苹果',
-        value: 104
-      },
-      {
-        text: '香蕉',
-        value: 105
-      },
-      {
-        text: '西红柿',
-        value: 106
-      }
-    ],
-    '2002': [
-      {
-        text: '衬衫',
-        value: 107
-      },
-      {
-        text: '短裤',
-        value: 108
-      },
-      {
-        text: '上衣',
-        value: 109
-      }
-    ]
   }
-},
-```
+}
+</script>
+````
 
-##### 例3中国地区联级数据结构
+### 属性参数说明
 
-```
-import {provs_data, citys_data, dists_data} from 'vue-pickers/lib/areaData'
+参数 | 说明 | 是否必须 | 类型 |默认值
+---- | --- | --- | --- | ---
+show | 显示隐藏picker | 是 | Boolean | false
+columns | 列数设置  | 是 | Number | 1 
+defaultData | 默认显示设置  | 否 | Array<object> | []
+link | 是否开启联动数据  | 否 | Boolean | false
+selectData | 数据设置，分别对应列（data1: [], data2: [], data3: [],）  | 是 | Object | {}
 
-pickData3: {
-  columns: 3,
-  link: true,
-  pData1: provs_data,
-  pData2: citys_data,
-  pData3: dists_data,
-},
-```
+### 事件说明
+
+参数 | 说明 | 是否必须 | 类型 |默认值
+---- | --- | --- | --- | ---
+cancel | 取消选择 | 否 | function | 无
+confirm | 确认选择  | 否 | function(val) | 无
 
 
-
-  [1]: http://img.store.naice.me/vue-pick.gif
-  [2]: https://github.com/naihe138/vue-picker/blob/master/arearSelect/demo.vue
-  [3]: http://gitblog.naice.me/vue-picker/arearSelect/index.html
+[1]: http://img.store.naice.me/vue-pick.gif
+[3]: http://gitblog.naice.me/vue-picker/example/index.html
