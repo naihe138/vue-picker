@@ -341,10 +341,9 @@
           this.pData3 = this.selectData.data3 || []
         } else {
           this.pData1 = this.selectData.data1
-          console.log(this.selectData.data1)
-          this.pData2 = this.selectData.data2[this.pData1[0].value]
+          this.pData2 = this.pData1.length > 0 ? this.selectData.data2[this.pData1[0].value] : []
           if (this.columns === 3) {
-            this.pData3 = this.selectData.data3[this.pData2[0].value]
+            this.pData3 = this.pData2.length > 0 ? this.selectData.data3[this.pData2[0].value] : []
           }
         }
         if (this.columns === 1) {
