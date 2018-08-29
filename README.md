@@ -88,6 +88,8 @@ columns | 列数设置  | 是 | Number | 1
 defaultData | 默认显示设置  | 否 | Array<object> | []
 link | 是否开启联动数据  | 否 | Boolean | false
 selectData | 数据设置，分别对应列（data1: [], data2: [], data3: [],）  | 是 | Object | {}
+isRemember | 是否每次打开都是初始化的位置高度（设置这个默认值就没有用了）  | 否 | Boolean | false
+
 
 ### 事件说明
 
