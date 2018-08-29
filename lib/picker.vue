@@ -95,6 +95,10 @@
       selectData: {
         type: Object,
         default: {}
+      },
+      isRemember: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -267,6 +271,19 @@
           var pos1 = 0
           var pos2 = 0
           var pos3 = 0
+          if (defaultData.length === 0 && this.isRemember) {
+            if (this.columns === 1) {
+              province.style.transform = province.style['-webkit-transform'] = 'translate3d(0, 0, 0)';
+              province.setAttribute('top', '0em');
+            } else if (this.columns === 2) {
+              city.setAttribute('top', '0em');
+              city.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
+            } else if (this.columns === 3) {
+              county.setAttribute('top', '0em');
+              county.style["-webkit-transform"] = 'translate3d(0, 0, 0)';
+            }
+            return
+          }
           if (defaultData[0] && defaultData[0].value) {
             this.selects.select1 = defaultData[0]
             for (var i = 0, len = this.pData1.length; i < len; i++) {
