@@ -125,6 +125,7 @@
         e.preventDefault()
       },
       gearTouchStart(e) {
+        e.stopPropagation()
         e.preventDefault()
         var target = e.target
         while (true) {
@@ -147,6 +148,7 @@
       },
       //手指移动
       gearTouchMove(e) {
+        e.stopPropagation()
         e.preventDefault()
         var target = e.target
         while (true) {
@@ -167,6 +169,7 @@
         }
       },
       gearTouchEnd(e) {
+        e.stopPropagation()
         e.preventDefault()
         var target = e.target
         while (true) {
