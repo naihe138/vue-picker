@@ -8,7 +8,7 @@ a picker componemt for vue2.0
 
 #### demo
 
-[demo 地址：http://gitblog.naice.me/vue-picker/example/index.html][3]
+[demo 地址：http://gitblog.naice.me/vue-picker/example/index.html#/][3]
 
 
 #### install
@@ -100,4 +100,4 @@ confirm | 确认选择  | 否 | function(val) | 无
 
 
 [1]: http://img.store.naice.me/vue-picker22.gif
-[3]: http://gitblog.naice.me/vue-picker/example/index.html
+[3]: http://gitblog.naice.me/vue-picker/example/index.html#/
