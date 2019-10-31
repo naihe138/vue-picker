@@ -3,7 +3,8 @@ const webpack = require('webpack')
 const TerserJSPlugin = require('terser-webpack-plugin')
 
 module.exports = {
-  entry: './src/index.js',
+  mode: 'production',
+  entry: './dist/test.esm.js',
   output: {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
@@ -16,25 +17,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.css$/,
-        use: [
-          'vue-style-loader',
-          'css-loader'
-        ],
-      },
-      {
-        test: /\.scss$/,
-        use: [
-          'vue-style-loader',
-          'css-loader',
-          'sass-loader'
-        ],
-      },
-      {
-        test: /\.vue$/,
-        loader: 'vue-loader',
-      },
-      {
         test: /\.js$/,
         use: {
           loader: 'babel-loader',
@@ -44,13 +26,6 @@ module.exports = {
         },
         exclude: /node_modules/
       },
-      {
-        test: /\.(png|jpg|gif|svg)$/,
-        loader: 'file-loader',
-        options: {
-          name: '[name].[ext]?[hash]'
-        }
-      }
     ]
   },
   optimization: {
@@ -71,14 +46,5 @@ module.exports = {
         }
       })
     ]
-  },
-  plugins: [
-    // new ExtractTextPlugin("style.css")
-  ],
-  resolve: {
-    extensions: ['*', '.js', '.vue', '.json']
-  },
-  performance: {
-    hints: false
   }
 }
