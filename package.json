@@ -4,7 +4,7 @@
   "description": "a picker componemt for vue2.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,18 @@
   "homepage": "https://github.com/naihe138/vue-picker#readme",
   "directories": {
     "lib": "lib"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "babel-loader": "^8.0.6",
+    "css-loader": "^3.2.0",
+    "sass-loader": "^8.0.0",
+    "terser-webpack-plugin": "^2.2.1",
+    "vue-loader": "^15.7.1",
+    "vue-style-loader": "^4.1.2",
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
   }
 }
