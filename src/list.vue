@@ -7,6 +7,7 @@
 </template>
 
 <script>
+  import { getClient, START_EVENT, MOVE_EVENT, END_EVENT } from './utils.js'
   const MoveTime = 300
   export default {
     props: {
@@ -42,7 +43,7 @@
         this.distStartTime = 0
         this.timer = 0
         // 监听开始时间
-        this.$refs.list.addEventListener('touchstart', this.handleStart)
+        this.$refs.list.addEventListener(START_EVENT, this.handleStart, false)
       },
       // 根据index 设置滚动位置
       setTop (index = 0) {
@@ -55,20 +56,20 @@
         }
       },
       handleStart (e) {
-        this.distStartTop = e.changedTouches[0].clientY
+        this.distStartTop = getClient(e).y
         this.distStartTime = new Date().getTime()
         this.timer = 0
         // ----
-        this.startY = e.changedTouches[0].clientY
+        this.startY = getClient(e).y
         this.ulStyle.transitionDuration = `0ms`
         this.ulStyle.transitionProperty = `none`
         // --
-        document.addEventListener('touchmove', this.handleMove)
-        document.addEventListener('touchend', this.handleEnd)
+        document.addEventListener(MOVE_EVENT, this.handleMove, false)
+        document.addEventListener(END_EVENT, this.handleEnd, false)
       },
       handleMove (e) {
-        this.deltaY = e.changedTouches[0].clientY - this.startY
-        this.startY = e.changedTouches[0].clientY
+        this.deltaY = getClient(e).y - this.startY
+        this.startY = getClient(e).y
         if (this.startTop > this.bottom) {
           this.startTop = this.bottom
         } else if (this.startTop < this.top) {
@@ -79,8 +80,8 @@
         this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
       },
       handleEnd (e) {
-        document.removeEventListener('touchmove', this.handleMove)
-        document.removeEventListener('touchend', this.handleEnd)
+        document.removeEventListener(MOVE_EVENT, this.handleMove, false)
+        document.removeEventListener(END_EVENT, this.handleEnd, false)
         // --
         this.ulStyle.transitionProperty = `all`
         this.ulStyle.transitionDuration = `${MoveTime}ms`
@@ -114,7 +115,7 @@
           }
           return
         }
-        let endTop = e.changedTouches[0].pageY
+        let endTop = getClient(e).y
         let speed = ((endTop - this.distStartTop) / (endTime - this.distStartTime)) * 16
         let f = 0
         this.timer = true
@@ -188,7 +189,7 @@
       }
     },
     beforeDestroy () {
-      this.$refs.list.removeEventListener('touchstart', this.handleStart)
+      this.$refs.list.removeEventListener(START_EVENT, this.handleStart, false)
     }
   }
 </script>

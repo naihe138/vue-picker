@@ -111,10 +111,6 @@
       }
     },
     methods: {
-      pickerMove (e) {
-        e.preventDefault()
-        e.stopPropagation()
-      },
       formateData () {
         if (this.layer > 1) {
           this.setLinkColumn()
@@ -176,9 +172,6 @@
           this.column4 = this.column3[this.dIndex3].children || []
         }
       },
-      init () {
-        this.$refs.picker.addEventListener('mousemove', this.pickerMove)
-      },
       change (index, res) {
         this.result[index] = res
         this.$emit('change', this.result)
@@ -229,9 +222,6 @@
     created () {
       this.result = []
       this.formateData()
-    },
-    mounted () {
-      this.init()
     }
   }
 </script>
