@@ -93,4 +93,4 @@ confirm | 确认选择  | 否 | function(val) | 无
 
 
 [1]: http://ypimg.naice.me/vue-picker.gif
-[3]: http://gitblog.naice.me/vue-picker/example/index.html#/
+[3]: http://gitblog.naice.me/vue-picker/index.html#/
