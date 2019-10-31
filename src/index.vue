@@ -44,9 +44,9 @@
   </transition>
 </template>
 <script>
-  import Header from './header'
-  import List from './list'
-  import { DEFTAULT_ITEM_HEIGHT } from './utils'
+  import Header from './header.vue'
+  import List from './list.vue'
+  import { DEFTAULT_ITEM_HEIGHT } from './utils.js'
   export default {
     name: 'VuePicker',
     props: {

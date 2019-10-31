@@ -3,10 +3,10 @@ import autoprefixer from 'autoprefixer'
 import precss from 'precss'
 export default [
   {
-    input: './test.vue',
+    input: './src/index.vue',
     output: {
       format: 'esm',
-      file: 'dist/test.esm.js'
+      file: 'dist/picker.esm.js'
     },
     plugins: [
       vue({

@@ -4,6 +4,7 @@
   "description": "a picker componemt for vue2.0",
   "main": "index.js",
   "scripts": {
+    "rollup": "rollup -c ./rollup.config.js",
     "build": "webpack",
     "dev": "webpack --config ./webpack.config-dev.js"
   },

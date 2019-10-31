@@ -4,10 +4,10 @@ const TerserJSPlugin = require('terser-webpack-plugin')
 
 module.exports = {
   mode: 'production',
-  entry: './dist/test.esm.js',
+  entry: './dist/index.js',
   output: {
-    path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
+    path: path.resolve(__dirname, './lib'),
+    publicPath: '/lib/',
     filename: 'vue-picker.js',
     library: 'vue-picker',
     libraryTarget: 'umd',

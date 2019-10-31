@@ -1,1 +1,1 @@
-module.exports=require('./lib/picker.vue')
+module.exports=require('./lib/picker.js')
