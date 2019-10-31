@@ -1,7 +1,7 @@
 {
   "name": "vue-pickers",
   "version": "2.0.0",
-  "description": "a picker componemt for vue2.0",
+  "description": "A picker componemt for vue2.0",
   "main": "index.js",
   "scripts": {
     "rollup": "rollup -c ./rollup.config.js",
