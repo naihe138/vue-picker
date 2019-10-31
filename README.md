@@ -1,5 +1,6 @@
 # vue-picker
-a picker componemt for vue2.0
+
+A picker componemt for vue2.0
 
 ------
 走了一圈 `github` 都没有找到自己想要的移动端的 `vue-picker`的组件，于是自己就下手，撸了一个出来，感受下效果图。
@@ -22,13 +23,13 @@ a picker componemt for vue2.0
 
 <template>
   <div>
-    <vue-pickers
-      :show="show"
-      :columns="columns"
-      :defaultData="defaultData"
-      :selectData="pickData"
-      @cancel="close"
-      @confirm="confirmFn"></vue-pickers>
+    <VuePicker :data="pickData"
+      @cancel="cancel"
+      @confirm="confirm"
+      :showToolbar="false"
+      :maskClick="true"
+      :visible.sync="pickerVisible"
+    />
   </div>
 </template>
 
@@ -38,43 +39,30 @@ export default {
   components: {
     vuePickers
   },
-  data() {
+  data () {
+    let tdata = []
+    for (let i = 0; i < 20; i++) {
+      tdata.push({
+        label: `第${i}行`,
+        value: i
+      })
+    }
     return {
-      show: false,
-      columns: 1,
-      defaultData: [
-        {
-          text: 1999,
-          value: 1999
-        }
-      ],
-      pickData: {
-        // 第一列的数据结构
-        data1: [
-          {
-            text: 1999,
-            value: 1999
-          },
-          {
-            text: 2001,
-            value: 2001
-          }
-        ]
-      }
+      pickerVisible: false,
+      pickData: [ tdata ],
+      result: ''
     }
   },
   methods: {
-    close() {
-      this.show = false
+    cancel () {
+      console.log('cancel')
+      this.result = 'click cancel result: null'
     },
-    confirmFn(val) {
-      this.show = false
-      this.defaultData = [val.select1]
-    },
-    toShow() {
-      this.show = true
+    confirm (res) {
+      this.result = JSON.stringify(res)
+      console.log(res)
     }
-  }
+  },
 }
 </script>
 ````
@@ -83,21 +71,26 @@ export default {
 
 参数 | 说明 | 是否必须 | 类型 |默认值
 ---- | --- | --- | --- | ---
-show | 显示隐藏picker | 是 | Boolean | false
-columns | 列数设置  | 是 | Number | 1 
-defaultData | 默认显示设置  | 否 | Array<object> | []
+visible | 显示/隐藏picker | 是 | Boolean | false
+data | pickerData，多列[data1, data2]  | 是 | Array | []
+layer | 联动显示列数  | 否 | Number | 0
 link | 是否开启联动数据  | 否 | Boolean | false
-selectData | 数据设置，分别对应列（data1: [], data2: [], data3: [],）  | 是 | Object | {}
-isRemember | 是否每次打开都是初始化的位置高度（设置这个默认值就没有用了）  | 否 | Boolean | false
+defaultIndex | 默认显示的index  | 是 | Number || [](多列用数组)
+cancelText | 取消按钮文字  | 否 | String | '取消'
+confirmText | 去确认按钮文字  | 否 | String | '确认'
+title | picker标题  | 否 | String | ''
+showToolbar | 显示头部  | 否 | Boolean | false
+maskClick | 遮罩层是否可以点击关闭  | 否 | Boolean | false
 
 
 ### 事件说明
 
 参数 | 说明 | 是否必须 | 类型 |默认值
 ---- | --- | --- | --- | ---
+change | 数据变化事件 | 否 | function(val) | 无
 cancel | 取消选择 | 否 | function | 无
 confirm | 确认选择  | 否 | function(val) | 无
 
 
-[1]: http://img.store.naice.me/vue-picker22.gif
+[1]: http://ypimg.naice.me/vue-picker.gif
 [3]: http://gitblog.naice.me/vue-picker/example/index.html#/
