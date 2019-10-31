@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div class="pickerbox" v-show="visible">
+    <div class="pickerbox" v-show="visible" @click="clickMask">
       <transition name="toup">
         <div class="vue-picker" ref="picker" v-show="visible">
           <Header v-if="showToolbar"
@@ -85,6 +85,10 @@
       showToolbar: {
         type: Boolean,
         default: false
+      },
+      maskClick: {
+        type: Boolean,
+        default: false
       }
     },
     components: {
@@ -111,6 +115,11 @@
       }
     },
     methods: {
+      clickMask () {
+        if (this.maskClick) {
+          this.$emit('update:visible', false)
+        }
+      },
       formateData () {
         if (this.layer > 1) {
           this.setLinkColumn()
@@ -180,21 +189,27 @@
         if (res) {
           this.change(0, res)
           this.dIndex2 = 0
-          this.changeLink('column2', res)
+          if (this.layer > 1) {
+            this.changeLink('column2', res)
+          }
         }
       },
       change2 (res) {
         if (res) {
           this.change(1, res)
           this.dIndex3 = 0
-          this.changeLink('column3', res)
+          if (this.layer > 2) {
+            this.changeLink('column3', res)
+          }
         }
       },
       change3 (res) {
         if (res) {
           this.change(2, res)
           this.dIndex4 = 0
-          this.changeLink('column4', res)
+          if (this.layer > 3) {
+            this.changeLink('column4', res)
+          }
         }
       },
       change4 (res) {
@@ -217,11 +232,20 @@
       confirm () {
         this.$emit('confirm', this.result)
         this.$emit('update:visible', false)
+      },
+      stopPropagation (e) {
+        e.stopPropagation()
       }
     },
     created () {
       this.result = []
       this.formateData()
+    },
+    mounted () {
+      this.$refs.picker.addEventListener('click', this.stopPropagation)
+    },
+    beforeDestroy () {
+      this.$refs.picker.removeEventListener('click', this.stopPropagation)
     }
   }
 </script>
@@ -233,6 +257,7 @@
     left: 0;
     top: 0;
     background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
   }
   .fade-enter-active, .fade-leave-active {
     transition: opacity .3s;

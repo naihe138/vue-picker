@@ -50,10 +50,8 @@
         const { boxHeight, itemHeight } = this
         this.startTop = ((boxHeight - itemHeight) / 2) - (index * itemHeight)
         this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
-        if (this.selectIndex !== index) {
-          this.selectIndex = index
-          this.change()
-        }
+        this.selectIndex = index
+        this.change()
       },
       handleStart (e) {
         this.distStartTop = getClient(e).y
