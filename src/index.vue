@@ -258,15 +258,16 @@
     top: 0;
     background: rgba(0, 0, 0, 0.7);
     z-index: 9999;
+    overflow: hidden;
   }
   .fade-enter-active, .fade-leave-active {
-    transition: opacity .3s;
+    transition: opacity .2s;
   }
   .fade-enter, .fade-leave-to {
     opacity: 0;
   }
   .toup-enter-active, .toup-leave-active {
-    transition: transform .5s;
+    transition: transform .3s;
   }
   .toup-enter, .toup-leave-to {
     transform: translate3d(0, 100px, 0);
