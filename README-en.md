@@ -1,9 +1,7 @@
-中文 | [English](https://github.com/naihe138/vue-picker/blob/master/README-en.md)
+English | [中文](https://github.com/naihe138/vue-picker/blob/master/README.md)
 
 A picker componemt for vue2.0
-
 ------
-走了一圈 `github` 都没有找到自己想要的移动端的 `vue-picker`的组件，于是自己就下手，撸了一个出来，感受下效果图。
 ![vue-pick.gif][1]
 
 
@@ -37,7 +35,7 @@ A picker componemt for vue2.0
   var tdata = []
   for (let i = 0; i < 20; i++) {
     tdata.push({
-      label: '第' + i + '行',
+      label: 'The' + i + 'row',
       value: i
     })
   }
@@ -69,29 +67,29 @@ A picker componemt for vue2.0
 </script>
 ````
 
-## 属性参数说明
+## Attributes
 
-参数 | 说明 | 是否必须 | 类型 |默认值
+Attribute | Description | require | Type | Default
 ---- | --- | --- | --- | ---
-visible | 显示/隐藏picker | 是 | Boolean | false
-data | pickerData，多列[data1, data2]  | 是 | Array | []
-layer | 联动显示列数  | 否 | Number | 0
-link | 是否开启联动数据  | 否 | Boolean | false
-defaultIndex | 默认显示的index  | 否 | Number/[](多列用数组) | 无
-cancelText | 取消按钮文字  | 否 | String | '取消'
-confirmText | 去确认按钮文字  | 否 | String | '确认'
-title | picker标题  | 否 | String | ''
-showToolbar | 显示头部  | 否 | Boolean | false
-maskClick | 遮罩层是否可以点击关闭  | 否 | Boolean | false
+visible | show/hide picker | yes | Boolean | false
+data | pickerData，colums[data1, data2]  | yes | Array | []
+layer | linkage column  | no | Number | 0
+link | open linkage data  | no | Boolean | false
+defaultIndex | default index  | no | Number/[](for more colums) | 无
+cancelText | cancel text  | no | String | '取消'
+confirmText | confirm text  | no | String | '确认'
+title | picker title  | no | String | ''
+showToolbar | show toolbar  | no | Boolean | false
+maskClick | click mask  | no | Boolean | false
 
 
-## 事件说明
+## Events
 
-参数 | 说明 | 是否必须 | 类型 |默认值
+Event Name | Description | require | Type | Default
 ---- | --- | --- | --- | ---
-change | 数据变化事件 | 否 | function(val) | 无
-cancel | 取消选择 | 否 | function | 无
-confirm | 确认选择  | 否 | function(val) | 无
+change | select change | no | function(val) | -
+cancel | cancel button click | no | function | -
+confirm | confirm button click  | no | function(val) | -
 
 
 [1]: http://ypimg.naice.me/vue-picker.gif
