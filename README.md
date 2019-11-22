@@ -3,7 +3,10 @@
 A picker componemt for vue2.0
 
 ------
+
 走了一圈 `github` 都没有找到自己想要的移动端的 `vue-picker`的组件，于是自己就下手，撸了一个出来，感受下效果图。
+
+
 ![vue-pick.gif][1]
 
 
