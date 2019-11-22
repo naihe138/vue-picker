@@ -1,4 +1,4 @@
-English | [中文](https://github.com/naihe138/vue-picker/blob/master/README.md)
+English | [中文](https://github.com/naihe138/vue-picker)
 
 A picker componemt for vue2.0
 ------
