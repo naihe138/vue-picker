@@ -20,47 +20,51 @@ A picker componemt for vue2.0
 #### 使用
 
 ````javascript
-
 <template>
   <div>
+    <button @click="show">show picker</button>
     <VuePicker :data="pickData"
+      :showToolbar="true"
       @cancel="cancel"
       @confirm="confirm"
-      :showToolbar="true"
-      :maskClick="true"
       :visible.sync="pickerVisible"
     />
   </div>
 </template>
 
 <script>
-  import vuePickers from 'vue-pickers'
+  import VuePicker from 'vue-pickers'
+  var tdata = []
+  for (let i = 0; i < 20; i++) {
+    tdata.push({
+      label: '第' + i + '行',
+      value: i
+    })
+  }
   export default {
-    components: { vuePickers },
+    components: {
+      VuePicker
+    },
     data () {
-      let tdata = []
-      for (let i = 0; i < 20; i++) {
-        tdata.push({
-          label: `第${i}行`,
-          value: i
-        })
-      }
       return {
         pickerVisible: false,
-        pickData: [ tdata ],
+        pickData: [
+          tdata
+        ],
         result: ''
       }
     },
     methods: {
+      show () {
+        this.pickerVisible = true
+      },
       cancel () {
-        console.log('cancel')
         this.result = 'click cancel result: null'
       },
       confirm (res) {
         this.result = JSON.stringify(res)
-        console.log(res)
       }
-    },
+    }
   }
 </script>
 ````
