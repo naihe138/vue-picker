@@ -10,14 +10,14 @@ A picker componemt for vue2.0
 ![vue-pick.gif][1]
 
 
-#### demo
+#### Demo
 
 [http://gitblog.naice.me/vue-picker/example/index.html#/][3]
 
 
-#### install
+#### Install
 
-`npm install vue-pickers --save`
+`npm install vue-pickers --save` or `yarn add vue-pickers`
 
 
 #### 使用
