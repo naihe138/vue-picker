@@ -235,6 +235,17 @@
       },
       stopPropagation (e) {
         e.stopPropagation()
+      },
+      fixedBody() {
+        const scrollTop = document.body.scrollTop || document.documentElement.scrollTop
+        document.body.style.cssText += 'position:fixed;width:100%;top:-' + scrollTop + 'px;'
+      },
+      looseBody() {
+        const body = document.body
+        body.style.position = ''
+        const top = body.style.top
+        document.body.scrollTop = document.documentElement.scrollTop = -parseInt(top)
+        body.style.top = ''
       }
     },
     created () {
@@ -243,9 +254,11 @@
     },
     mounted () {
       this.$refs.picker.addEventListener('click', this.stopPropagation)
+      this.fixedBody()
     },
     beforeDestroy () {
       this.$refs.picker.removeEventListener('click', this.stopPropagation)
+      this.looseBody()
     }
   }
 </script>
