@@ -269,6 +269,7 @@
     },
     mounted () {
       this.$refs.picker.addEventListener('click', this.stopPropagation)
+      this.fixedBody()
     },
     watch: {
       visible (v) {
@@ -282,6 +283,7 @@
     },
     beforeDestroy () {
       this.$refs.picker.removeEventListener('click', this.stopPropagation)
+      this.looseBody()
     }
   }
 </script>
