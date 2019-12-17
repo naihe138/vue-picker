@@ -117,6 +117,7 @@
     methods: {
       clickMask () {
         if (this.maskClick) {
+          this.looseBody()
           this.$emit('update:visible', false)
         }
       },
@@ -128,6 +129,7 @@
           this.column2 = this.data[1] || []
           this.column3 = this.data[2] || []
           this.column4 = this.data[3] || []
+          this.setNormalIndex()
         }
       },
       setLinkColumn () {
@@ -181,6 +183,16 @@
           this.column4 = this.column3[this.dIndex3].children || []
         }
       },
+      setNormalIndex () {
+        const { defaultIndex } = this
+        if (Array.isArray(defaultIndex)) {
+          defaultIndex.forEach((item, i) => {
+            this[`dIndex${i+1}`] = item || 0
+          })
+        } else {
+          this.dIndex1 = Number(defaultIndex) || 0
+        }
+      },
       change (index, res) {
         this.result[index] = res
         this.$emit('change', this.result)
@@ -226,15 +238,29 @@
         }
       },
       cancel () {
+        this.looseBody()
         this.$emit('cancel')
         this.$emit('update:visible', false)
       },
       confirm () {
+        this.looseBody()
         this.$emit('confirm', this.result)
         this.$emit('update:visible', false)
       },
       stopPropagation (e) {
         e.stopPropagation()
+      },
+      fixedBody() {
+        const scrollTop = document.body.scrollTop || document.documentElement.scrollTop
+        this.prevBodyCss = document.body.style.cssText
+        document.body.style.cssText += 'position:fixed;width:100%;top:-' + scrollTop + 'px;'
+      },
+      looseBody() {
+        const body = document.body
+        const top = body.style.top
+        body.style.cssText = this.prevBodyCss
+        body.scrollTop = document.documentElement.scrollTop = -parseInt(top)
+        body.style.top = ''
       }
     },
     created () {
@@ -243,6 +269,16 @@
     },
     mounted () {
       this.$refs.picker.addEventListener('click', this.stopPropagation)
+    },
+    watch: {
+      visible (v) {
+        if (v) {
+          this.fixedBody()
+        }
+      },
+      defaultIndex () {
+        this.formateData()
+      }
     },
     beforeDestroy () {
       this.$refs.picker.removeEventListener('click', this.stopPropagation)
