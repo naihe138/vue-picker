@@ -184,14 +184,27 @@
         }
       },
       setNormalIndex () {
-        const { defaultIndex } = this
-        if (Array.isArray(defaultIndex)) {
-          defaultIndex.forEach((item, i) => {
-            this[`dIndex${i+1}`] = item || 0
-          })
-        } else {
-          this.dIndex1 = Number(defaultIndex) || 0
+        this.$nextTick(() => {
+          const { defaultIndex } = this
+          if (Array.isArray(defaultIndex)) {
+            this.setDefaultIndex()
+          } else {
+            this.dIndex1 = Number(defaultIndex) || 0
+          }
+        })
+      },
+      setDefaultIndex () {
+        const { indexArr } = this
+        const self = this
+        function next() {
+          let promise = Promise.resolve()
+          let index = 0
+          while (index < self.data.length) {
+            promise = promise.then(indexArr[index])
+            index++
+          }
         }
+        next()
       },
       change (index, res) {
         this.result[index] = res
@@ -200,8 +213,8 @@
       change1 (res) {
         if (res) {
           this.change(0, res)
-          this.dIndex2 = 0
           if (this.layer > 1) {
+            this.dIndex2 = 0
             this.changeLink('column2', res)
           }
         }
@@ -209,8 +222,8 @@
       change2 (res) {
         if (res) {
           this.change(1, res)
-          this.dIndex3 = 0
           if (this.layer > 2) {
+            this.dIndex3 = 0
             this.changeLink('column3', res)
           }
         }
@@ -218,8 +231,8 @@
       change3 (res) {
         if (res) {
           this.change(2, res)
-          this.dIndex4 = 0
           if (this.layer > 3) {
+            this.dIndex4 = 0
             this.changeLink('column4', res)
           }
         }
@@ -265,11 +278,16 @@
     },
     created () {
       this.result = []
+      this.indexArr = [
+        () => this.dIndex1 = this.defaultIndex[0] || 0,
+        () => this.dIndex2 = this.defaultIndex[1] || 0,
+        () => this.dIndex3 = this.defaultIndex[2] || 0,
+        () => this.dIndex4 = this.defaultIndex[3] || 0
+      ]
       this.formateData()
     },
     mounted () {
       this.$refs.picker.addEventListener('click', this.stopPropagation)
-      this.fixedBody()
     },
     watch: {
       visible (v) {
@@ -283,7 +301,6 @@
     },
     beforeDestroy () {
       this.$refs.picker.removeEventListener('click', this.stopPropagation)
-      this.looseBody()
     }
   }
 </script>

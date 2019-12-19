@@ -184,6 +184,9 @@
     watch: {
       column () {
         this.init()
+      },
+      defaultIndex () {
+        this.setTop(this.defaultIndex)
       }
     },
     beforeDestroy () {
