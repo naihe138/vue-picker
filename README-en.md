@@ -75,7 +75,7 @@ visible | show/hide picker | yes | Boolean | false
 data | pickerData，colums[data1, data2]  | yes | Array | []
 layer | linkage column  | no | Number | 0
 link | open linkage data  | no | Boolean | false
-defaultIndex | default index  | no | Number/[](for more colums) | 无
+defaultIndex | default index  | no | Number/Array(for more colums) | 无
 cancelText | cancel text  | no | String | '取消'
 confirmText | confirm text  | no | String | '确认'
 title | picker title  | no | String | ''
