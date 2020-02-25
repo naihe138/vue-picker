@@ -7,7 +7,7 @@ A picker componemt for vue2.0
 
 #### Demo
 
-[http://gitblog.naice.me/vue-picker/example/index.html#/][3]
+[https://naihe138.github.io/vue-picker/index.html][3]
 
 
 #### Install
@@ -93,4 +93,4 @@ confirm | confirm button click  | no | function(val) | -
 
 
 [1]: http://ypimg.naice.me/vue-picker.gif
-[3]: http://gitblog.naice.me/vue-picker/index.html#/
+[3]: https://naihe138.github.io/vue-picker/index.html
