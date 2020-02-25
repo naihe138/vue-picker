@@ -7,7 +7,7 @@ A picker componemt for vue2.0
 
 #### Demo
 
-[http://gitblog.naice.me/vue-picker/example/index.html#/][3]
+[https://naihe138.github.io/vue-picker/index.html][3]
 
 
 #### Install
@@ -75,7 +75,7 @@ visible | show/hide picker | yes | Boolean | false
 data | pickerData，colums[data1, data2]  | yes | Array | []
 layer | linkage column  | no | Number | 0
 link | open linkage data  | no | Boolean | false
-defaultIndex | default index  | no | Number/[](for more colums) | 无
+defaultIndex | default index  | no | Number/Array(for more colums) | 无
 cancelText | cancel text  | no | String | '取消'
 confirmText | confirm text  | no | String | '确认'
 title | picker title  | no | String | ''
@@ -93,4 +93,4 @@ confirm | confirm button click  | no | function(val) | -
 
 
 [1]: http://ypimg.naice.me/vue-picker.gif
-[3]: http://gitblog.naice.me/vue-picker/index.html#/
+[3]: https://naihe138.github.io/vue-picker/index.html

@@ -117,6 +117,7 @@
     methods: {
       clickMask () {
         if (this.maskClick) {
+          this.looseBody()
           this.$emit('update:visible', false)
         }
       },
@@ -128,6 +129,7 @@
           this.column2 = this.data[1] || []
           this.column3 = this.data[2] || []
           this.column4 = this.data[3] || []
+          this.setNormalIndex()
         }
       },
       setLinkColumn () {
@@ -181,6 +183,29 @@
           this.column4 = this.column3[this.dIndex3].children || []
         }
       },
+      setNormalIndex () {
+        this.$nextTick(() => {
+          const { defaultIndex } = this
+          if (Array.isArray(defaultIndex)) {
+            this.setDefaultIndex()
+          } else {
+            this.dIndex1 = Number(defaultIndex) || 0
+          }
+        })
+      },
+      setDefaultIndex () {
+        const { indexArr } = this
+        const self = this
+        function next() {
+          let promise = Promise.resolve()
+          let index = 0
+          while (index < self.data.length) {
+            promise = promise.then(indexArr[index])
+            index++
+          }
+        }
+        next()
+      },
       change (index, res) {
         this.result[index] = res
         this.$emit('change', this.result)
@@ -188,8 +213,8 @@
       change1 (res) {
         if (res) {
           this.change(0, res)
-          this.dIndex2 = 0
           if (this.layer > 1) {
+            this.dIndex2 = 0
             this.changeLink('column2', res)
           }
         }
@@ -197,8 +222,8 @@
       change2 (res) {
         if (res) {
           this.change(1, res)
-          this.dIndex3 = 0
           if (this.layer > 2) {
+            this.dIndex3 = 0
             this.changeLink('column3', res)
           }
         }
@@ -206,8 +231,8 @@
       change3 (res) {
         if (res) {
           this.change(2, res)
-          this.dIndex4 = 0
           if (this.layer > 3) {
+            this.dIndex4 = 0
             this.changeLink('column4', res)
           }
         }
@@ -226,23 +251,53 @@
         }
       },
       cancel () {
+        this.looseBody()
         this.$emit('cancel')
         this.$emit('update:visible', false)
       },
       confirm () {
+        this.looseBody()
         this.$emit('confirm', this.result)
         this.$emit('update:visible', false)
       },
       stopPropagation (e) {
         e.stopPropagation()
+      },
+      fixedBody() {
+        const scrollTop = document.body.scrollTop || document.documentElement.scrollTop
+        this.prevBodyCss = document.body.style.cssText
+        document.body.style.cssText += 'position:fixed;width:100%;top:-' + scrollTop + 'px;'
+      },
+      looseBody() {
+        const body = document.body
+        const top = body.style.top
+        body.style.cssText = this.prevBodyCss
+        body.scrollTop = document.documentElement.scrollTop = -parseInt(top)
+        body.style.top = ''
       }
     },
     created () {
       this.result = []
+      this.indexArr = [
+        () => this.dIndex1 = this.defaultIndex[0] || 0,
+        () => this.dIndex2 = this.defaultIndex[1] || 0,
+        () => this.dIndex3 = this.defaultIndex[2] || 0,
+        () => this.dIndex4 = this.defaultIndex[3] || 0
+      ]
       this.formateData()
     },
     mounted () {
       this.$refs.picker.addEventListener('click', this.stopPropagation)
+    },
+    watch: {
+      visible (v) {
+        if (v) {
+          this.fixedBody()
+        }
+      },
+      defaultIndex () {
+        this.formateData()
+      }
     },
     beforeDestroy () {
       this.$refs.picker.removeEventListener('click', this.stopPropagation)

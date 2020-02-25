@@ -12,7 +12,7 @@ A picker componemt for vue2.0
 
 #### Demo
 
-[http://gitblog.naice.me/vue-picker/example/index.html#/][3]
+[https://naihe138.github.io/vue-picker/index.html][3]
 
 
 #### Install
@@ -80,7 +80,7 @@ visible | 显示/隐藏picker | 是 | Boolean | false
 data | pickerData，多列[data1, data2]  | 是 | Array | []
 layer | 联动显示列数  | 否 | Number | 0
 link | 是否开启联动数据  | 否 | Boolean | false
-defaultIndex | 默认显示的index  | 否 | Number/[](多列用数组) | 无
+defaultIndex | 默认显示的index  | 否 | Number/Array(多列用数组) | 无
 cancelText | 取消按钮文字  | 否 | String | '取消'
 confirmText | 去确认按钮文字  | 否 | String | '确认'
 title | picker标题  | 否 | String | ''
@@ -98,4 +98,4 @@ confirm | 确认选择  | 否 | function(val) | 无
 
 
 [1]: http://ypimg.naice.me/vue-picker.gif
-[3]: http://gitblog.naice.me/vue-picker/index.html#/
+[3]: https://naihe138.github.io/vue-picker/index.html
