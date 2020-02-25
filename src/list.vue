@@ -7,7 +7,7 @@
 </template>
 
 <script>
-  import { getClient, START_EVENT, MOVE_EVENT, END_EVENT } from './utils.js'
+  import { getClient, START_EVENT, MOVE_EVENT, END_EVENT, isPC } from './utils.js'
   const MoveTime = 300
   export default {
     props: {
@@ -43,7 +43,6 @@
         this.distStartTime = 0
         this.timer = 0
         // 监听开始时间
-        this.$refs.list.addEventListener(START_EVENT, this.handleStart, false)
       },
       // 根据index 设置滚动位置
       setTop (index = 0) {
@@ -176,10 +175,46 @@
       },
       change () {
         this.$emit('change', this.column[this.selectIndex])
+      },
+      mousewheel (e) {
+        const { deltaX, deltaY } = e
+        if (Math.abs(deltaX) < Math.abs(deltaY)) {
+          this.startTop = this.startTop - deltaY
+          let b = this.bottom - this.itemHeight
+          let t = this.top + this.itemHeight
+          let shouldMove = true
+          if (this.startTop > b ) {
+            this.startTop = b
+            shouldMove = false
+          } else if (this.startTop < t) {
+            this.startTop = t
+            shouldMove = false
+          }
+          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
+          if (shouldMove) {
+            clearInterval(this.wheelTimer)
+            this.wheelTimer = setTimeout(() => {
+              let index = Math.round((this.startTop) / this.itemHeight)
+              this.startTop = index * this.itemHeight
+              if (this.startTop > this.bottom) {
+                this.startTop = this.bottom - this.itemHeight
+                index = -2
+              } else if (this.startTop < this.top) {
+                this.startTop = this.top + this.itemHeight
+                index = this.column.length + 1
+              }
+              this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
+            }, 100)
+          }
+        }
       }
     },
     mounted () {
       this.init()
+      this.$refs.list.addEventListener(START_EVENT, this.handleStart, false)
+      if (isPC()) {
+        this.$refs.list.addEventListener('wheel', this.mousewheel, false)
+      }
     },
     watch: {
       column () {
@@ -188,6 +223,7 @@
     },
     beforeDestroy () {
       this.$refs.list.removeEventListener(START_EVENT, this.handleStart, false)
+      this.$refs.list.removeEventListener('wheel', this.mousewheel, false)
     }
   }
 </script>
