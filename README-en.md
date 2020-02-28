@@ -14,7 +14,6 @@ A picker componemt for vue2.0
 
 `npm install vue-pickers --save` or `yarn add vue-pickers`
 
-
 #### Use
 
 ````javascript
@@ -81,6 +80,8 @@ confirmText | confirm text  | no | String | '确认'
 title | picker title  | no | String | ''
 showToolbar | show toolbar  | no | Boolean | false
 maskClick | click mask  | no | Boolean | false
+itemHeight | height of each row | no | Number, String | '44px'
+rowNumber | how many lines to display (singular number recommended) | no | Number | 5
 
 
 ## Events

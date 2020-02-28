@@ -4,13 +4,12 @@ A picker componemt for vue2.0
 
 ------
 
-走了一圈 `github` 都没有找到自己想要的移动端的 `vue-picker`的组件，于是自己就下手，撸了一个出来，感受下效果图。
-
+走了一圈 `github` 都没有找到自己想要的移动端的 `vue-picker`的组件，于是自己就下手，撸了一个出来，包括了（普通选择、联动选择、中国地址选择...）简单配置就可以出现一个强大的picker，感受下效果图。
 
 ![vue-pick.gif][1]
 
 
-#### Demo
+#### Demo(快点去复制代码体验一波吧)
 
 [https://naihe138.github.io/vue-picker/index.html][3]
 
@@ -86,7 +85,8 @@ confirmText | 去确认按钮文字  | 否 | String | '确认'
 title | picker标题  | 否 | String | ''
 showToolbar | 显示头部  | 否 | Boolean | false
 maskClick | 遮罩层是否可以点击关闭  | 否 | Boolean | false
-
+itemHeight | 每一行的高度 | 否 | Number, String | '44px'
+rowNumber | 显示多少行(建议单数) | 否 | Number | 5
 
 ## 事件说明
 
