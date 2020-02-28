@@ -1,8 +1,5 @@
 中文 | [English](https://github.com/naihe138/vue-picker/blob/master/README-en.md)
 
-A picker componemt for vue2.0
-
-------
 
 `vue-picker`的组件，包括了（<span style="color:#4078F2">普通选择</span>、<span style="color:#4078F2">联动选择</span>、<span style="color:#4078F2">中国地址选择</span>...）简单配置就可以出现一个强大的picker，感受下效果图。
 
