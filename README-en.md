@@ -5,16 +5,16 @@ A picker componemt for vue2.0
 ![vue-pick.gif][1]
 
 
-#### Demo
+## Demo
 
 [https://naihe138.github.io/vue-picker/index.html][3]
 
 
-#### Install
+## Install
 
 `npm install vue-pickers --save` or `yarn add vue-pickers`
 
-#### Use
+## Use
 
 ````javascript
 <template>

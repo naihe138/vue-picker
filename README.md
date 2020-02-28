@@ -7,17 +7,17 @@
 ![vue-pick.gif][1]
 
 
-#### Demo(快点去复制代码体验一波吧)
+## Demo(快点去复制代码体验一波吧)
 
 [https://naihe138.github.io/vue-picker/index.html][3]
 
 
-#### Install
+## Install
 
 `npm install vue-pickers --save` or `yarn add vue-pickers`
 
 
-#### 使用
+## 使用
 
 > 普通网页开发直接复制lib/vue-picker.js文件夹到项目即可直接使用
 
