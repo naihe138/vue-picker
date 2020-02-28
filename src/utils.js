@@ -15,7 +15,6 @@ export const getClient = e => {
     y: clientY
   }
 }
-
 export const isPC = () => {
   const userAgentInfo = navigator.userAgent
   const Agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod']

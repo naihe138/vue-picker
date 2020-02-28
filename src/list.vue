@@ -8,7 +8,13 @@
 
 <script>
   import { getClient, START_EVENT, MOVE_EVENT, END_EVENT, isPC } from './utils.js'
-  const MoveTime = 300
+  const DEFAULT_DURATION = 200
+  // 惯性滑动思路:
+  // 在手指离开屏幕时，如果和上一次 move 时的间隔小于 `LIMIT_TIME` 且 move
+  // 距离大于 `LIMIT_DISTANCE` 时，执行惯性滑动
+  const LIMIT_TIME = 300
+  const LIMIT_DISTANCE = 15
+  const IS_PC = isPC()
   export default {
     props: {
       defaultIndex: {
@@ -28,8 +34,13 @@
           transform: `translate3d(0px, 0px, 0px)`,
           transitionDuration: `0ms`,
           transitionProperty: `none`,
-          lineHeight: `44px`
+          lineHeight: `${this.itemHeight}px`
         }
+      }
+    },
+    computed: {
+      count() {
+        return this.column.length
       }
     },
     methods: {
@@ -37,12 +48,7 @@
         this.setTop(this.defaultIndex)
         const halfBox = (this.boxHeight - this.itemHeight) / 2
         this.bottom = halfBox + this.itemHeight
-        this.top = halfBox - this.column.length * this.itemHeight
-        // 惯性运动相关
-        this.distStartTop = 0
-        this.distStartTime = 0
-        this.timer = 0
-        // 监听开始时间
+        this.top = halfBox - this.count * this.itemHeight
       },
       // 根据index 设置滚动位置
       setTop (index = 0) {
@@ -54,47 +60,60 @@
       },
       handleStart (e) {
         this.distStartTop = getClient(e).y
-        this.distStartTime = new Date().getTime()
-        this.timer = 0
+        this.touchStartTime = Date.now()
         // ----
         this.startY = getClient(e).y
+        this.momentumTop = this.startTop
+
         this.ulStyle.transitionDuration = `0ms`
         this.ulStyle.transitionProperty = `none`
-        // --
-        document.addEventListener(MOVE_EVENT, this.handleMove, false)
-        document.addEventListener(END_EVENT, this.handleEnd, false)
+        if (IS_PC) {
+          document.addEventListener(MOVE_EVENT, this.handleMove, false)
+          document.addEventListener(END_EVENT, this.handleEnd, false)
+        }
       },
       handleMove (e) {
-        this.deltaY = getClient(e).y - this.startY
+        e.preventDefault()
+        e.stopPropagation()
+        this.disY = getClient(e).y - this.startY
         this.startY = getClient(e).y
         if (this.startTop > this.bottom) {
           this.startTop = this.bottom
         } else if (this.startTop < this.top) {
           this.startTop = this.top
         } else {
-          this.startTop += this.deltaY
+          this.startTop += this.disY
         }
         this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
+        const now = Date.now()
+
+        if (now - this.touchStartTime > LIMIT_TIME) {
+          this.touchStartTime = now
+          this.momentumTop = this.startTop
+        }
       },
-      handleEnd (e) {
-        document.removeEventListener(MOVE_EVENT, this.handleMove, false)
-        document.removeEventListener(END_EVENT, this.handleEnd, false)
-        // --
+      handleEnd () {
+        if (IS_PC) {
+          document.removeEventListener(MOVE_EVENT, this.handleMove, false)
+          document.removeEventListener(END_EVENT, this.handleEnd, false)
+        }
+        const distance = this.startTop - this.momentumTop
+        const duration = Date.now() - this.touchStartTime
+        const allowMomentum = duration < LIMIT_TIME && Math.abs(distance) > LIMIT_DISTANCE
+        if (allowMomentum) {
+          this.toMove(distance, duration)
+        } else {
+          this.setTranfromTop()
+        }
+      },
+      setTranfromTop () {
         this.ulStyle.transitionProperty = `all`
-        this.ulStyle.transitionDuration = `${MoveTime}ms`
+        this.ulStyle.transitionDuration = `${DEFAULT_DURATION}ms`
         if (this.startTop >= this.bottom - this.itemHeight) {
           this.setTop()
         } else if (this.startTop <= this.top + this.itemHeight) {
-          this.setTop(this.column.length - 1)
+          this.setTop(this.count - 1)
         } else {
-          this.ulStyle.transitionDuration = `0ms`
-          this.ulStyle.transitionProperty = `none`
-          this.toMove(e)
-        }
-      },
-      toMove (e) {
-        let endTime = new Date().getTime()
-        if(endTime - this.distStartTime > 300) {
           let index = Math.round((this.startTop) / this.itemHeight)
           this.startTop = index * this.itemHeight
           if (this.startTop > this.bottom) {
@@ -102,7 +121,7 @@
             index = -2
           } else if (this.startTop < this.top) {
             this.startTop = this.top + this.itemHeight
-            index = this.column.length + 1
+            index = this.count + 1
           }
           this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
           index = 2 - index
@@ -110,73 +129,23 @@
             this.selectIndex = index
             this.change()
           }
-          return
         }
-        let endTop = getClient(e).y
-        let speed = ((endTop - this.distStartTop) / (endTime - this.distStartTime)) * 16
-        let f = 0
-        this.timer = true
-        const show = () => {
-          this.timer && requestAnimationFrame(show)
-          f = Math.min(Math.abs(speed) / 32, 1)
-          if(speed > 0.5){
-            speed -= f
-          } else if(speed < -0.5){
-            speed += f
-          } else {
-            speed = 0
-            this.timer = false
-            let index = Math.round(this.startTop / this.itemHeight)
-            this.startTop = index * this.itemHeight
-            if (this.startTop >= this.bottom) {
-              this.startTop = this.bottom - this.itemHeight
-              this.ulStyle.transitionProperty = `all`
-              this.ulStyle.transitionDuration = `${MoveTime}ms`
-              index = -2
-            } else if (this.startTop <= this.top) {
-              this.ulStyle.transitionProperty = `all`
-              this.ulStyle.transitionDuration = `${MoveTime}ms`
-              this.startTop = this.top + this.itemHeight
-              index = this.column.length + 1
-            }
-            this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
-            index = 2 - index
-            if (this.selectIndex !== index) {
-              this.selectIndex = index
-              this.change()
-            }
-            return
-          }
-          this.startTop += speed
-          if (this.startTop > this.bottom + this.itemHeight) {
-            speed = 0
-            this.timer = false
-            this.startTop = this.bottom - this.itemHeight
-            this.ulStyle.transitionProperty = `all`
-            this.ulStyle.transitionDuration = `${MoveTime}ms`
-            if (this.selectIndex !== 0) {
-              this.selectIndex = 0
-              this.change()
-            }
-          } else if (this.startTop < this.top - this.itemHeight) {
-            speed = 0
-            this.timer = false
-            this.ulStyle.transitionProperty = `all`
-            this.ulStyle.transitionDuration = `${MoveTime}ms`
-            this.startTop = this.top + this.itemHeight
-            if (this.selectIndex !== (this.column.length - 1)) {
-              this.selectIndex = this.column.length - 1
-              this.change()
-            }
-          }
-          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
-        }
-        show()
+      },
+      toMove (distance, duration) {
+        const speed = Math.abs(distance / duration)
+        distance = this.startTop + (speed / 0.002) * (distance < 0 ? -1 : 1)
+        this.ulStyle.transitionProperty = `all`
+        this.ulStyle.transitionDuration = `1000ms`
+        this.setTop(Math.min(Math.max(Math.round(-distance / this.itemHeight), 0), this.count - 1))
       },
       change () {
         this.$emit('change', this.column[this.selectIndex])
       },
       mousewheel (e) {
+        e.preventDefault()
+        e.stopPropagation()
+        this.ulStyle.transitionDuration = `0ms`
+        this.ulStyle.transitionProperty = `none`
         const { deltaX, deltaY } = e
         if (Math.abs(deltaX) < Math.abs(deltaY)) {
           this.startTop = this.startTop - deltaY
@@ -193,27 +162,20 @@
           this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
           if (shouldMove) {
             clearInterval(this.wheelTimer)
-            this.wheelTimer = setTimeout(() => {
-              let index = Math.round((this.startTop) / this.itemHeight)
-              this.startTop = index * this.itemHeight
-              if (this.startTop > this.bottom) {
-                this.startTop = this.bottom - this.itemHeight
-                index = -2
-              } else if (this.startTop < this.top) {
-                this.startTop = this.top + this.itemHeight
-                index = this.column.length + 1
-              }
-              this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
-            }, 100)
+            this.wheelTimer = setTimeout(this.setTranfromTop, 100)
           }
         }
       }
     },
     mounted () {
       this.init()
-      this.$refs.list.addEventListener(START_EVENT, this.handleStart, false)
-      if (isPC()) {
-        this.$refs.list.addEventListener('wheel', this.mousewheel, false)
+      // 监听开始事件
+      this.$el.addEventListener(START_EVENT, this.handleStart, false)
+      if (IS_PC) {
+        this.$el.addEventListener('wheel', this.mousewheel, false)
+      } else {
+        this.$el.addEventListener(MOVE_EVENT, this.handleMove, false)
+        this.$el.addEventListener(END_EVENT, this.handleEnd, false)
       }
     },
     watch: {
@@ -225,8 +187,12 @@
       }
     },
     beforeDestroy () {
-      this.$refs.list.removeEventListener(START_EVENT, this.handleStart, false)
-      this.$refs.list.removeEventListener('wheel', this.mousewheel, false)
+      this.$el.removeEventListener(START_EVENT, this.handleStart, false)
+      if (IS_PC) {
+        this.$el.removeEventListener('wheel', this.mousewheel, false)
+        this.$el.removeEventListener(MOVE_EVENT, this.handleMove, false)
+        this.$el.removeEventListener(END_EVENT, this.handleEnd, false)
+      }
     }
   }
 </script>

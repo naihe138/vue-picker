@@ -89,6 +89,10 @@
       maskClick: {
         type: Boolean,
         default: false
+      },
+      rowNumber: {
+        type: Number,
+        default: 5
       }
     },
     components: {
@@ -111,7 +115,10 @@
       boxHeight () {
         let itemHeight = parseInt(this.itemHeight)
         itemHeight = itemHeight ? itemHeight : DEFTAULT_ITEM_HEIGHT
-        return itemHeight * 5
+        return itemHeight * this.getRowNumber
+      },
+      getRowNumber () {
+        return this.rowNumber % 2 === 0 ? this.rowNumber + 1 : this.rowNumber
       }
     },
     methods: {

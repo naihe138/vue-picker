@@ -111,7 +111,6 @@ const getClient = e => {
     y: clientY
   }
 };
-
 const isPC = () => {
   const userAgentInfo = navigator.userAgent;
   const Agents = ['Android', 'iPhone', 'SymbianOS', 'Windows Phone', 'iPad', 'iPod'];
@@ -126,7 +125,13 @@ const isPC = () => {
 };
 
 //
-const MoveTime = 300;
+const DEFAULT_DURATION = 200;
+// 惯性滑动思路:
+// 在手指离开屏幕时，如果和上一次 move 时的间隔小于 `LIMIT_TIME` 且 move
+// 距离大于 `LIMIT_DISTANCE` 时，执行惯性滑动
+const LIMIT_TIME = 300;
+const LIMIT_DISTANCE = 15;
+const IS_PC = isPC();
 var script$1 = {
   props: {
     defaultIndex: {
@@ -146,8 +151,13 @@ var script$1 = {
         transform: `translate3d(0px, 0px, 0px)`,
         transitionDuration: `0ms`,
         transitionProperty: `none`,
-        lineHeight: `44px`
+        lineHeight: `${this.itemHeight}px`
       }
+    }
+  },
+  computed: {
+    count() {
+      return this.column.length
     }
   },
   methods: {
@@ -155,12 +165,7 @@ var script$1 = {
       this.setTop(this.defaultIndex);
       const halfBox = (this.boxHeight - this.itemHeight) / 2;
       this.bottom = halfBox + this.itemHeight;
-      this.top = halfBox - this.column.length * this.itemHeight;
-      // 惯性运动相关
-      this.distStartTop = 0;
-      this.distStartTime = 0;
-      this.timer = 0;
-      // 监听开始时间
+      this.top = halfBox - this.count * this.itemHeight;
     },
     // 根据index 设置滚动位置
     setTop (index = 0) {
@@ -172,47 +177,60 @@ var script$1 = {
     },
     handleStart (e) {
       this.distStartTop = getClient(e).y;
-      this.distStartTime = new Date().getTime();
-      this.timer = 0;
+      this.touchStartTime = Date.now();
       // ----
       this.startY = getClient(e).y;
+      this.momentumTop = this.startTop;
+
       this.ulStyle.transitionDuration = `0ms`;
       this.ulStyle.transitionProperty = `none`;
-      // --
-      document.addEventListener(MOVE_EVENT, this.handleMove, false);
-      document.addEventListener(END_EVENT, this.handleEnd, false);
+      if (IS_PC) {
+        document.addEventListener(MOVE_EVENT, this.handleMove, false);
+        document.addEventListener(END_EVENT, this.handleEnd, false);
+      }
     },
     handleMove (e) {
-      this.deltaY = getClient(e).y - this.startY;
+      e.preventDefault();
+      e.stopPropagation();
+      this.disY = getClient(e).y - this.startY;
       this.startY = getClient(e).y;
       if (this.startTop > this.bottom) {
         this.startTop = this.bottom;
       } else if (this.startTop < this.top) {
         this.startTop = this.top;
       } else {
-        this.startTop += this.deltaY;
+        this.startTop += this.disY;
       }
       this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`;
+      const now = Date.now();
+
+      if (now - this.touchStartTime > LIMIT_TIME) {
+        this.touchStartTime = now;
+        this.momentumTop = this.startTop;
+      }
     },
-    handleEnd (e) {
-      document.removeEventListener(MOVE_EVENT, this.handleMove, false);
-      document.removeEventListener(END_EVENT, this.handleEnd, false);
-      // --
+    handleEnd () {
+      if (IS_PC) {
+        document.removeEventListener(MOVE_EVENT, this.handleMove, false);
+        document.removeEventListener(END_EVENT, this.handleEnd, false);
+      }
+      const distance = this.startTop - this.momentumTop;
+      const duration = Date.now() - this.touchStartTime;
+      const allowMomentum = duration < LIMIT_TIME && Math.abs(distance) > LIMIT_DISTANCE;
+      if (allowMomentum) {
+        this.toMove(distance, duration);
+      } else {
+        this.setTranfromTop();
+      }
+    },
+    setTranfromTop () {
       this.ulStyle.transitionProperty = `all`;
-      this.ulStyle.transitionDuration = `${MoveTime}ms`;
+      this.ulStyle.transitionDuration = `${DEFAULT_DURATION}ms`;
       if (this.startTop >= this.bottom - this.itemHeight) {
         this.setTop();
       } else if (this.startTop <= this.top + this.itemHeight) {
-        this.setTop(this.column.length - 1);
+        this.setTop(this.count - 1);
       } else {
-        this.ulStyle.transitionDuration = `0ms`;
-        this.ulStyle.transitionProperty = `none`;
-        this.toMove(e);
-      }
-    },
-    toMove (e) {
-      let endTime = new Date().getTime();
-      if(endTime - this.distStartTime > 300) {
         let index = Math.round((this.startTop) / this.itemHeight);
         this.startTop = index * this.itemHeight;
         if (this.startTop > this.bottom) {
@@ -220,7 +238,7 @@ var script$1 = {
           index = -2;
         } else if (this.startTop < this.top) {
           this.startTop = this.top + this.itemHeight;
-          index = this.column.length + 1;
+          index = this.count + 1;
         }
         this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`;
         index = 2 - index;
@@ -228,73 +246,23 @@ var script$1 = {
           this.selectIndex = index;
           this.change();
         }
-        return
       }
-      let endTop = getClient(e).y;
-      let speed = ((endTop - this.distStartTop) / (endTime - this.distStartTime)) * 16;
-      let f = 0;
-      this.timer = true;
-      const show = () => {
-        this.timer && requestAnimationFrame(show);
-        f = Math.min(Math.abs(speed) / 32, 1);
-        if(speed > 0.5){
-          speed -= f;
-        } else if(speed < -0.5){
-          speed += f;
-        } else {
-          speed = 0;
-          this.timer = false;
-          let index = Math.round(this.startTop / this.itemHeight);
-          this.startTop = index * this.itemHeight;
-          if (this.startTop >= this.bottom) {
-            this.startTop = this.bottom - this.itemHeight;
-            this.ulStyle.transitionProperty = `all`;
-            this.ulStyle.transitionDuration = `${MoveTime}ms`;
-            index = -2;
-          } else if (this.startTop <= this.top) {
-            this.ulStyle.transitionProperty = `all`;
-            this.ulStyle.transitionDuration = `${MoveTime}ms`;
-            this.startTop = this.top + this.itemHeight;
-            index = this.column.length + 1;
-          }
-          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`;
-          index = 2 - index;
-          if (this.selectIndex !== index) {
-            this.selectIndex = index;
-            this.change();
-          }
-          return
-        }
-        this.startTop += speed;
-        if (this.startTop > this.bottom + this.itemHeight) {
-          speed = 0;
-          this.timer = false;
-          this.startTop = this.bottom - this.itemHeight;
-          this.ulStyle.transitionProperty = `all`;
-          this.ulStyle.transitionDuration = `${MoveTime}ms`;
-          if (this.selectIndex !== 0) {
-            this.selectIndex = 0;
-            this.change();
-          }
-        } else if (this.startTop < this.top - this.itemHeight) {
-          speed = 0;
-          this.timer = false;
-          this.ulStyle.transitionProperty = `all`;
-          this.ulStyle.transitionDuration = `${MoveTime}ms`;
-          this.startTop = this.top + this.itemHeight;
-          if (this.selectIndex !== (this.column.length - 1)) {
-            this.selectIndex = this.column.length - 1;
-            this.change();
-          }
-        }
-        this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`;
-      };
-      show();
+    },
+    toMove (distance, duration) {
+      const speed = Math.abs(distance / duration);
+      distance = this.startTop + (speed / 0.002) * (distance < 0 ? -1 : 1);
+      this.ulStyle.transitionProperty = `all`;
+      this.ulStyle.transitionDuration = `1000ms`;
+      this.setTop(Math.min(Math.max(Math.round(-distance / this.itemHeight), 0), this.count - 1));
     },
     change () {
       this.$emit('change', this.column[this.selectIndex]);
     },
     mousewheel (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.ulStyle.transitionDuration = `0ms`;
+      this.ulStyle.transitionProperty = `none`;
       const { deltaX, deltaY } = e;
       if (Math.abs(deltaX) < Math.abs(deltaY)) {
         this.startTop = this.startTop - deltaY;
@@ -311,27 +279,20 @@ var script$1 = {
         this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`;
         if (shouldMove) {
           clearInterval(this.wheelTimer);
-          this.wheelTimer = setTimeout(() => {
-            let index = Math.round((this.startTop) / this.itemHeight);
-            this.startTop = index * this.itemHeight;
-            if (this.startTop > this.bottom) {
-              this.startTop = this.bottom - this.itemHeight;
-              index = -2;
-            } else if (this.startTop < this.top) {
-              this.startTop = this.top + this.itemHeight;
-              index = this.column.length + 1;
-            }
-            this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`;
-          }, 100);
+          this.wheelTimer = setTimeout(this.setTranfromTop, 100);
         }
       }
     }
   },
   mounted () {
     this.init();
-    this.$refs.list.addEventListener(START_EVENT, this.handleStart, false);
-    if (isPC()) {
-      this.$refs.list.addEventListener('wheel', this.mousewheel, false);
+    // 监听开始事件
+    this.$el.addEventListener(START_EVENT, this.handleStart, false);
+    if (IS_PC) {
+      this.$el.addEventListener('wheel', this.mousewheel, false);
+    } else {
+      this.$el.addEventListener(MOVE_EVENT, this.handleMove, false);
+      this.$el.addEventListener(END_EVENT, this.handleEnd, false);
     }
   },
   watch: {
@@ -343,8 +304,12 @@ var script$1 = {
     }
   },
   beforeDestroy () {
-    this.$refs.list.removeEventListener(START_EVENT, this.handleStart, false);
-    this.$refs.list.removeEventListener('wheel', this.mousewheel, false);
+    this.$el.removeEventListener(START_EVENT, this.handleStart, false);
+    if (IS_PC) {
+      this.$el.removeEventListener('wheel', this.mousewheel, false);
+      this.$el.removeEventListener(MOVE_EVENT, this.handleMove, false);
+      this.$el.removeEventListener(END_EVENT, this.handleEnd, false);
+    }
   }
 };
 
@@ -373,11 +338,11 @@ __vue_render__$1._withStripped = true;
   /* style */
   const __vue_inject_styles__$1 = function (inject) {
     if (!inject) return
-    inject("data-v-07e7454a_0", { source: ".list[data-v-07e7454a] {\n  margin: 0;\n  padding: 0;\n  -webkit-box-flex: 1;\n          flex: 1;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n.list ul[data-v-07e7454a] {\n  margin: 0;\n  padding: 0;\n  -webkit-transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n          transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n  line-height: 44px;\n}\n.list li[data-v-07e7454a] {\n  margin: 0;\n  padding: 0;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n  padding: 0 5px;\n  color: #000;\n}\n\n/*# sourceMappingURL=list.vue.map */", map: {"version":3,"sources":["/Users/naice/my-project/vue-picker/src/list.vue","list.vue"],"names":[],"mappings":"AA0OA;EACA,SAAA;EACA,UAAA;EACA,mBAAA;UAAA,OAAA;EACA,WAAA;EACA,YAAA;EACA,gBAAA;ACzOA;AD0OA;EACA,SAAA;EACA,UAAA;EACA,kEAAA;UAAA,0DAAA;EACA,iBAAA;ACxOA;AD0OA;EACA,SAAA;EACA,UAAA;EACA,gBAAA;EACA,mBAAA;EACA,uBAAA;EACA,cAAA;EACA,WAAA;ACxOA;;AAEA,mCAAmC","file":"list.vue","sourcesContent":["<template>\n  <div class=\"list\" ref=\"list\">\n    <ul :style=\"ulStyle\">\n      <li v-for=\"(item, index) in column\" :key=\"'item' + index\">{{item.label}}</li>\n    </ul>\n  </div>\n</template>\n\n<script>\n  import { getClient, START_EVENT, MOVE_EVENT, END_EVENT, isPC } from './utils.js'\n  const MoveTime = 300\n  export default {\n    props: {\n      defaultIndex: {\n        type: Number,\n        default: 0\n      },\n      column: {\n        type: Array,\n        default: () => ([])\n      },\n      boxHeight: Number,\n      itemHeight: Number\n    },\n    data() {\n      return {\n        ulStyle: {\n          transform: `translate3d(0px, 0px, 0px)`,\n          transitionDuration: `0ms`,\n          transitionProperty: `none`,\n          lineHeight: `44px`\n        }\n      }\n    },\n    methods: {\n      init () {\n        this.setTop(this.defaultIndex)\n        const halfBox = (this.boxHeight - this.itemHeight) / 2\n        this.bottom = halfBox + this.itemHeight\n        this.top = halfBox - this.column.length * this.itemHeight\n        // 惯性运动相关\n        this.distStartTop = 0\n        this.distStartTime = 0\n        this.timer = 0\n        // 监听开始时间\n      },\n      // 根据index 设置滚动位置\n      setTop (index = 0) {\n        const { boxHeight, itemHeight } = this\n        this.startTop = ((boxHeight - itemHeight) / 2) - (index * itemHeight)\n        this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n        this.selectIndex = index\n        this.change()\n      },\n      handleStart (e) {\n        this.distStartTop = getClient(e).y\n        this.distStartTime = new Date().getTime()\n        this.timer = 0\n        // ----\n        this.startY = getClient(e).y\n        this.ulStyle.transitionDuration = `0ms`\n        this.ulStyle.transitionProperty = `none`\n        // --\n        document.addEventListener(MOVE_EVENT, this.handleMove, false)\n        document.addEventListener(END_EVENT, this.handleEnd, false)\n      },\n      handleMove (e) {\n        this.deltaY = getClient(e).y - this.startY\n        this.startY = getClient(e).y\n        if (this.startTop > this.bottom) {\n          this.startTop = this.bottom\n        } else if (this.startTop < this.top) {\n          this.startTop = this.top\n        } else {\n          this.startTop += this.deltaY\n        }\n        this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n      },\n      handleEnd (e) {\n        document.removeEventListener(MOVE_EVENT, this.handleMove, false)\n        document.removeEventListener(END_EVENT, this.handleEnd, false)\n        // --\n        this.ulStyle.transitionProperty = `all`\n        this.ulStyle.transitionDuration = `${MoveTime}ms`\n        if (this.startTop >= this.bottom - this.itemHeight) {\n          this.setTop()\n        } else if (this.startTop <= this.top + this.itemHeight) {\n          this.setTop(this.column.length - 1)\n        } else {\n          this.ulStyle.transitionDuration = `0ms`\n          this.ulStyle.transitionProperty = `none`\n          this.toMove(e)\n        }\n      },\n      toMove (e) {\n        let endTime = new Date().getTime()\n        if(endTime - this.distStartTime > 300) {\n          let index = Math.round((this.startTop) / this.itemHeight)\n          this.startTop = index * this.itemHeight\n          if (this.startTop > this.bottom) {\n            this.startTop = this.bottom - this.itemHeight\n            index = -2\n          } else if (this.startTop < this.top) {\n            this.startTop = this.top + this.itemHeight\n            index = this.column.length + 1\n          }\n          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n          index = 2 - index\n          if (this.selectIndex !== index) {\n            this.selectIndex = index\n            this.change()\n          }\n          return\n        }\n        let endTop = getClient(e).y\n        let speed = ((endTop - this.distStartTop) / (endTime - this.distStartTime)) * 16\n        let f = 0\n        this.timer = true\n        const show = () => {\n          this.timer && requestAnimationFrame(show)\n          f = Math.min(Math.abs(speed) / 32, 1)\n          if(speed > 0.5){\n            speed -= f\n          } else if(speed < -0.5){\n            speed += f\n          } else {\n            speed = 0\n            this.timer = false\n            let index = Math.round(this.startTop / this.itemHeight)\n            this.startTop = index * this.itemHeight\n            if (this.startTop >= this.bottom) {\n              this.startTop = this.bottom - this.itemHeight\n              this.ulStyle.transitionProperty = `all`\n              this.ulStyle.transitionDuration = `${MoveTime}ms`\n              index = -2\n            } else if (this.startTop <= this.top) {\n              this.ulStyle.transitionProperty = `all`\n              this.ulStyle.transitionDuration = `${MoveTime}ms`\n              this.startTop = this.top + this.itemHeight\n              index = this.column.length + 1\n            }\n            this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n            index = 2 - index\n            if (this.selectIndex !== index) {\n              this.selectIndex = index\n              this.change()\n            }\n            return\n          }\n          this.startTop += speed\n          if (this.startTop > this.bottom + this.itemHeight) {\n            speed = 0\n            this.timer = false\n            this.startTop = this.bottom - this.itemHeight\n            this.ulStyle.transitionProperty = `all`\n            this.ulStyle.transitionDuration = `${MoveTime}ms`\n            if (this.selectIndex !== 0) {\n              this.selectIndex = 0\n              this.change()\n            }\n          } else if (this.startTop < this.top - this.itemHeight) {\n            speed = 0\n            this.timer = false\n            this.ulStyle.transitionProperty = `all`\n            this.ulStyle.transitionDuration = `${MoveTime}ms`\n            this.startTop = this.top + this.itemHeight\n            if (this.selectIndex !== (this.column.length - 1)) {\n              this.selectIndex = this.column.length - 1\n              this.change()\n            }\n          }\n          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n        }\n        show()\n      },\n      change () {\n        this.$emit('change', this.column[this.selectIndex])\n      },\n      mousewheel (e) {\n        const { deltaX, deltaY } = e\n        if (Math.abs(deltaX) < Math.abs(deltaY)) {\n          this.startTop = this.startTop - deltaY\n          let b = this.bottom - this.itemHeight\n          let t = this.top + this.itemHeight\n          let shouldMove = true\n          if (this.startTop > b ) {\n            this.startTop = b\n            shouldMove = false\n          } else if (this.startTop < t) {\n            this.startTop = t\n            shouldMove = false\n          }\n          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n          if (shouldMove) {\n            clearInterval(this.wheelTimer)\n            this.wheelTimer = setTimeout(() => {\n              let index = Math.round((this.startTop) / this.itemHeight)\n              this.startTop = index * this.itemHeight\n              if (this.startTop > this.bottom) {\n                this.startTop = this.bottom - this.itemHeight\n                index = -2\n              } else if (this.startTop < this.top) {\n                this.startTop = this.top + this.itemHeight\n                index = this.column.length + 1\n              }\n              this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n            }, 100)\n          }\n        }\n      }\n    },\n    mounted () {\n      this.init()\n      this.$refs.list.addEventListener(START_EVENT, this.handleStart, false)\n      if (isPC()) {\n        this.$refs.list.addEventListener('wheel', this.mousewheel, false)\n      }\n    },\n    watch: {\n      column () {\n        this.init()\n      },\n      defaultIndex () {\n        this.setTop(this.defaultIndex)\n      }\n    },\n    beforeDestroy () {\n      this.$refs.list.removeEventListener(START_EVENT, this.handleStart, false)\n      this.$refs.list.removeEventListener('wheel', this.mousewheel, false)\n    }\n  }\n</script>\n\n<style lang=\"scss\" scoped>\n  .list {\n    margin: 0;\n    padding: 0;\n    flex: 1;\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n    ul {\n      margin: 0;\n      padding: 0;\n      transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n      line-height: 44px;\n    }\n    li {\n      margin: 0;\n      padding: 0;\n      overflow: hidden;\n      white-space: nowrap;\n      text-overflow: ellipsis;\n      padding: 0 5px;\n      color: #000;\n    }\n  }\n</style>\n",".list {\n  margin: 0;\n  padding: 0;\n  flex: 1;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n.list ul {\n  margin: 0;\n  padding: 0;\n  transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n  line-height: 44px;\n}\n.list li {\n  margin: 0;\n  padding: 0;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n  padding: 0 5px;\n  color: #000;\n}\n\n/*# sourceMappingURL=list.vue.map */"]}, media: undefined });
+    inject("data-v-ac8eb0dc_0", { source: ".list[data-v-ac8eb0dc] {\n  margin: 0;\n  padding: 0;\n  -webkit-box-flex: 1;\n          flex: 1;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n.list ul[data-v-ac8eb0dc] {\n  margin: 0;\n  padding: 0;\n  -webkit-transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n          transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n  line-height: 44px;\n}\n.list li[data-v-ac8eb0dc] {\n  margin: 0;\n  padding: 0;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n  padding: 0 5px;\n  color: #000;\n}\n\n/*# sourceMappingURL=list.vue.map */", map: {"version":3,"sources":["/Users/naice/my-project/vue-picker/src/list.vue","list.vue"],"names":[],"mappings":"AAwMA;EACA,SAAA;EACA,UAAA;EACA,mBAAA;UAAA,OAAA;EACA,WAAA;EACA,YAAA;EACA,gBAAA;ACvMA;ADwMA;EACA,SAAA;EACA,UAAA;EACA,kEAAA;UAAA,0DAAA;EACA,iBAAA;ACtMA;ADwMA;EACA,SAAA;EACA,UAAA;EACA,gBAAA;EACA,mBAAA;EACA,uBAAA;EACA,cAAA;EACA,WAAA;ACtMA;;AAEA,mCAAmC","file":"list.vue","sourcesContent":["<template>\n  <div class=\"list\" ref=\"list\">\n    <ul :style=\"ulStyle\">\n      <li v-for=\"(item, index) in column\" :key=\"'item' + index\">{{item.label}}</li>\n    </ul>\n  </div>\n</template>\n\n<script>\n  import { getClient, START_EVENT, MOVE_EVENT, END_EVENT, isPC } from './utils.js'\n  const DEFAULT_DURATION = 200\n  // 惯性滑动思路:\n  // 在手指离开屏幕时，如果和上一次 move 时的间隔小于 `LIMIT_TIME` 且 move\n  // 距离大于 `LIMIT_DISTANCE` 时，执行惯性滑动\n  const LIMIT_TIME = 300\n  const LIMIT_DISTANCE = 15\n  const IS_PC = isPC()\n  export default {\n    props: {\n      defaultIndex: {\n        type: Number,\n        default: 0\n      },\n      column: {\n        type: Array,\n        default: () => ([])\n      },\n      boxHeight: Number,\n      itemHeight: Number\n    },\n    data() {\n      return {\n        ulStyle: {\n          transform: `translate3d(0px, 0px, 0px)`,\n          transitionDuration: `0ms`,\n          transitionProperty: `none`,\n          lineHeight: `${this.itemHeight}px`\n        }\n      }\n    },\n    computed: {\n      count() {\n        return this.column.length\n      }\n    },\n    methods: {\n      init () {\n        this.setTop(this.defaultIndex)\n        const halfBox = (this.boxHeight - this.itemHeight) / 2\n        this.bottom = halfBox + this.itemHeight\n        this.top = halfBox - this.count * this.itemHeight\n      },\n      // 根据index 设置滚动位置\n      setTop (index = 0) {\n        const { boxHeight, itemHeight } = this\n        this.startTop = ((boxHeight - itemHeight) / 2) - (index * itemHeight)\n        this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n        this.selectIndex = index\n        this.change()\n      },\n      handleStart (e) {\n        this.distStartTop = getClient(e).y\n        this.touchStartTime = Date.now()\n        // ----\n        this.startY = getClient(e).y\n        this.momentumTop = this.startTop\n\n        this.ulStyle.transitionDuration = `0ms`\n        this.ulStyle.transitionProperty = `none`\n        if (IS_PC) {\n          document.addEventListener(MOVE_EVENT, this.handleMove, false)\n          document.addEventListener(END_EVENT, this.handleEnd, false)\n        }\n      },\n      handleMove (e) {\n        e.preventDefault()\n        e.stopPropagation()\n        this.disY = getClient(e).y - this.startY\n        this.startY = getClient(e).y\n        if (this.startTop > this.bottom) {\n          this.startTop = this.bottom\n        } else if (this.startTop < this.top) {\n          this.startTop = this.top\n        } else {\n          this.startTop += this.disY\n        }\n        this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n        const now = Date.now()\n\n        if (now - this.touchStartTime > LIMIT_TIME) {\n          this.touchStartTime = now\n          this.momentumTop = this.startTop\n        }\n      },\n      handleEnd () {\n        if (IS_PC) {\n          document.removeEventListener(MOVE_EVENT, this.handleMove, false)\n          document.removeEventListener(END_EVENT, this.handleEnd, false)\n        }\n        const distance = this.startTop - this.momentumTop\n        const duration = Date.now() - this.touchStartTime\n        const allowMomentum = duration < LIMIT_TIME && Math.abs(distance) > LIMIT_DISTANCE\n        if (allowMomentum) {\n          this.toMove(distance, duration)\n        } else {\n          this.setTranfromTop()\n        }\n      },\n      setTranfromTop () {\n        this.ulStyle.transitionProperty = `all`\n        this.ulStyle.transitionDuration = `${DEFAULT_DURATION}ms`\n        if (this.startTop >= this.bottom - this.itemHeight) {\n          this.setTop()\n        } else if (this.startTop <= this.top + this.itemHeight) {\n          this.setTop(this.count - 1)\n        } else {\n          let index = Math.round((this.startTop) / this.itemHeight)\n          this.startTop = index * this.itemHeight\n          if (this.startTop > this.bottom) {\n            this.startTop = this.bottom - this.itemHeight\n            index = -2\n          } else if (this.startTop < this.top) {\n            this.startTop = this.top + this.itemHeight\n            index = this.count + 1\n          }\n          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n          index = 2 - index\n          if (this.selectIndex !== index) {\n            this.selectIndex = index\n            this.change()\n          }\n        }\n      },\n      toMove (distance, duration) {\n        const speed = Math.abs(distance / duration)\n        distance = this.startTop + (speed / 0.002) * (distance < 0 ? -1 : 1)\n        this.ulStyle.transitionProperty = `all`\n        this.ulStyle.transitionDuration = `1000ms`\n        this.setTop(Math.min(Math.max(Math.round(-distance / this.itemHeight), 0), this.count - 1))\n      },\n      change () {\n        this.$emit('change', this.column[this.selectIndex])\n      },\n      mousewheel (e) {\n        e.preventDefault()\n        e.stopPropagation()\n        this.ulStyle.transitionDuration = `0ms`\n        this.ulStyle.transitionProperty = `none`\n        const { deltaX, deltaY } = e\n        if (Math.abs(deltaX) < Math.abs(deltaY)) {\n          this.startTop = this.startTop - deltaY\n          let b = this.bottom - this.itemHeight\n          let t = this.top + this.itemHeight\n          let shouldMove = true\n          if (this.startTop > b ) {\n            this.startTop = b\n            shouldMove = false\n          } else if (this.startTop < t) {\n            this.startTop = t\n            shouldMove = false\n          }\n          this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`\n          if (shouldMove) {\n            clearInterval(this.wheelTimer)\n            this.wheelTimer = setTimeout(this.setTranfromTop, 100)\n          }\n        }\n      }\n    },\n    mounted () {\n      this.init()\n      // 监听开始事件\n      this.$el.addEventListener(START_EVENT, this.handleStart, false)\n      if (IS_PC) {\n        this.$el.addEventListener('wheel', this.mousewheel, false)\n      } else {\n        this.$el.addEventListener(MOVE_EVENT, this.handleMove, false)\n        this.$el.addEventListener(END_EVENT, this.handleEnd, false)\n      }\n    },\n    watch: {\n      column () {\n        this.init()\n      },\n      defaultIndex () {\n        this.setTop(this.defaultIndex)\n      }\n    },\n    beforeDestroy () {\n      this.$el.removeEventListener(START_EVENT, this.handleStart, false)\n      if (IS_PC) {\n        this.$el.removeEventListener('wheel', this.mousewheel, false)\n        this.$el.removeEventListener(MOVE_EVENT, this.handleMove, false)\n        this.$el.removeEventListener(END_EVENT, this.handleEnd, false)\n      }\n    }\n  }\n</script>\n\n<style lang=\"scss\" scoped>\n  .list {\n    margin: 0;\n    padding: 0;\n    flex: 1;\n    width: 100%;\n    height: 100%;\n    overflow: hidden;\n    ul {\n      margin: 0;\n      padding: 0;\n      transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n      line-height: 44px;\n    }\n    li {\n      margin: 0;\n      padding: 0;\n      overflow: hidden;\n      white-space: nowrap;\n      text-overflow: ellipsis;\n      padding: 0 5px;\n      color: #000;\n    }\n  }\n</style>\n",".list {\n  margin: 0;\n  padding: 0;\n  flex: 1;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n}\n.list ul {\n  margin: 0;\n  padding: 0;\n  transition-timing-function: cubic-bezier(0.23, 1, 0.68, 1);\n  line-height: 44px;\n}\n.list li {\n  margin: 0;\n  padding: 0;\n  overflow: hidden;\n  white-space: nowrap;\n  text-overflow: ellipsis;\n  padding: 0 5px;\n  color: #000;\n}\n\n/*# sourceMappingURL=list.vue.map */"]}, media: undefined });
 
   };
   /* scoped */
-  const __vue_scope_id__$1 = "data-v-07e7454a";
+  const __vue_scope_id__$1 = "data-v-ac8eb0dc";
   /* module identifier */
   const __vue_module_identifier__$1 = undefined;
   /* functional template */
@@ -444,6 +409,10 @@ var script$2 = {
     maskClick: {
       type: Boolean,
       default: false
+    },
+    rowNumber: {
+      type: Number,
+      default: 5
     }
   },
   components: {
@@ -466,7 +435,10 @@ var script$2 = {
     boxHeight () {
       let itemHeight = parseInt(this.itemHeight);
       itemHeight = itemHeight ? itemHeight : DEFTAULT_ITEM_HEIGHT;
-      return itemHeight * 5
+      return itemHeight * this.getRowNumber
+    },
+    getRowNumber () {
+      return this.rowNumber % 2 === 0 ? this.rowNumber + 1 : this.rowNumber
     }
   },
   methods: {
@@ -790,11 +762,11 @@ __vue_render__$2._withStripped = true;
   /* style */
   const __vue_inject_styles__$2 = function (inject) {
     if (!inject) return
-    inject("data-v-59f1f4fb_0", { source: ".pickerbox[data-v-59f1f4fb] {\n  position: fixed;\n  width: 100vw;\n  height: 100vh;\n  left: 0;\n  top: 0;\n  background: rgba(0, 0, 0, 0.7);\n  z-index: 9999;\n  overflow: hidden;\n}\n.fade-enter-active[data-v-59f1f4fb], .fade-leave-active[data-v-59f1f4fb] {\n  -webkit-transition: opacity 0.2s;\n  transition: opacity 0.2s;\n}\n.fade-enter[data-v-59f1f4fb], .fade-leave-to[data-v-59f1f4fb] {\n  opacity: 0;\n}\n.toup-enter-active[data-v-59f1f4fb], .toup-leave-active[data-v-59f1f4fb] {\n  -webkit-transition: -webkit-transform 0.3s;\n  transition: -webkit-transform 0.3s;\n  transition: transform 0.3s;\n  transition: transform 0.3s, -webkit-transform 0.3s;\n}\n.toup-enter[data-v-59f1f4fb], .toup-leave-to[data-v-59f1f4fb] {\n  -webkit-transform: translate3d(0, 100px, 0);\n          transform: translate3d(0, 100px, 0);\n}\n.vue-picker[data-v-59f1f4fb] {\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  width: 100%;\n  background-color: #fff;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  -webkit-text-size-adjust: 100%;\n  -webkit-tap-highlight-color: transparent;\n}\n.content[data-v-59f1f4fb] {\n  overflow: hidden;\n  height: 220px;\n  position: relative;\n  display: -webkit-box;\n  display: flex;\n}\n.colums[data-v-59f1f4fb] {\n  display: -webkit-box;\n  display: flex;\n  overflow: hidden;\n  font-size: 16px;\n  text-align: center;\n  -webkit-box-flex: 1;\n          flex: 1;\n}\n.mask[data-v-59f1f4fb] {\n  position: absolute;\n  top: 0;\n  left: 0;\n  z-index: 2;\n  width: 100%;\n  height: 100%;\n  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.9)), to(rgba(255, 255, 255, 0.4))), -webkit-gradient(linear, left bottom, left top, from(rgba(255, 255, 255, 0.9)), to(rgba(255, 255, 255, 0.4)));\n  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4)), linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));\n  background-repeat: no-repeat;\n  background-position: top, bottom;\n  -webkit-backface-visibility: hidden;\n          backface-visibility: hidden;\n  pointer-events: none;\n  background-size: 100% 88px;\n}\n.hairline[data-v-59f1f4fb] {\n  position: absolute;\n  top: 50%;\n  left: 0;\n  z-index: 3;\n  width: 100%;\n  -webkit-transform: translateY(-50%);\n          transform: translateY(-50%);\n  pointer-events: none;\n  height: 44px;\n}\n.hairline[data-v-59f1f4fb]::after {\n  position: absolute;\n  box-sizing: border-box;\n  content: \" \";\n  pointer-events: none;\n  top: -50%;\n  right: -50%;\n  bottom: -50%;\n  left: -50%;\n  border: 0 solid #ebedf0;\n  -webkit-transform: scale(0.5);\n  transform: scale(0.5);\n  border-width: 1px 0;\n}\n\n/*# sourceMappingURL=index.vue.map */", map: {"version":3,"sources":["/Users/naice/my-project/vue-picker/src/index.vue","index.vue"],"names":[],"mappings":"AAmTA;EACA,eAAA;EACA,YAAA;EACA,aAAA;EACA,OAAA;EACA,MAAA;EACA,8BAAA;EACA,aAAA;EACA,gBAAA;AClTA;ADoTA;EACA,gCAAA;EAAA,wBAAA;ACjTA;ADmTA;EACA,UAAA;AChTA;ADkTA;EACA,0CAAA;EAAA,kCAAA;EAAA,0BAAA;EAAA,kDAAA;AC/SA;ADiTA;EACA,2CAAA;UAAA,mCAAA;AC9SA;ADiTA;EACA,kBAAA;EACA,OAAA;EACA,SAAA;EACA,WAAA;EACA,sBAAA;EACA,yBAAA;KAAA,sBAAA;MAAA,qBAAA;UAAA,iBAAA;EACA,8BAAA;EACA,wCAAA;AC9SA;ADgTA;EACA,gBAAA;EACA,aAAA;EACA,kBAAA;EACA,oBAAA;EAAA,aAAA;AC7SA;AD+SA;EACA,oBAAA;EAAA,aAAA;EACA,gBAAA;EACA,eAAA;EACA,kBAAA;EACA,mBAAA;UAAA,OAAA;AC5SA;AD8SA;EACA,kBAAA;EACA,MAAA;EACA,OAAA;EACA,UAAA;EACA,WAAA;EACA,YAAA;EACA,8OAAA;EAAA,wKAAA;EACA,4BAAA;EACA,gCAAA;EACA,mCAAA;UAAA,2BAAA;EACA,oBAAA;EACA,0BAAA;AC3SA;AD6SA;EACA,kBAAA;EACA,QAAA;EACA,OAAA;EACA,UAAA;EACA,WAAA;EACA,mCAAA;UAAA,2BAAA;EACA,oBAAA;EACA,YAAA;AC1SA;AD2SA;EACA,kBAAA;EACA,sBAAA;EACA,YAAA;EACA,oBAAA;EACA,SAAA;EACA,WAAA;EACA,YAAA;EACA,UAAA;EACA,uBAAA;EACA,6BAAA;EACA,qBAAA;EACA,mBAAA;ACzSA;;AAEA,oCAAoC","file":"index.vue","sourcesContent":["<template>\n  <transition name=\"fade\">\n    <div class=\"pickerbox\" v-show=\"visible\" @click=\"clickMask\">\n      <transition name=\"toup\">\n        <div class=\"vue-picker\" ref=\"picker\" v-show=\"visible\">\n          <Header v-if=\"showToolbar\"\n            :cancelText=\"cancelText\"\n            :confirmText=\"confirmText\"\n            :title=\"title\"\n            @cancel=\"cancel\"\n            @confirm=\"confirm\" />\n          <div class=\"content\" :style=\"{height: boxHeight + 'px'}\">\n            <div class=\"colums\">\n              <List :column=\"column1\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex1\"\n                @change=\"change1\" />\n              <List v-if=\"column2.length > 0\"\n                :column=\"column2\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex2\"\n                @change=\"change2\" />\n              <List v-if=\"column3.length > 0\"\n                :column=\"column3\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex3\"\n                @change=\"change3\" />\n              <List v-if=\"column4.length > 0\"\n                :column=\"column4\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex4\"\n                @change=\"change4\" />\n            </div>\n            <div class=\"mask\"></div>\n            <div class=\"hairline\"></div>\n          </div>\n        </div>\n      </transition>\n    </div>\n  </transition>\n</template>\n<script>\n  import Header from './header.vue'\n  import List from './list.vue'\n  import { DEFTAULT_ITEM_HEIGHT } from './utils.js'\n  export default {\n    name: 'VuePicker',\n    props: {\n      visible: {\n        type: Boolean,\n        default: false\n      },\n      data: {\n        type: Array,\n        default: () => []\n      },\n      layer: {\n        type: Number,\n        default: 0\n      },\n      itemHeight: {\n        type: [Number, String],\n        default: DEFTAULT_ITEM_HEIGHT\n      },\n      defaultIndex: {\n        type: [Number, Array],\n        default: 0\n      },\n      cancelText: {\n        type: String,\n        default: '取消'\n      },\n      confirmText: {\n        type: String,\n        default: '确认'\n      },\n      title: {\n        type: String,\n        default: ''\n      },\n      showToolbar: {\n        type: Boolean,\n        default: false\n      },\n      maskClick: {\n        type: Boolean,\n        default: false\n      }\n    },\n    components: {\n      Header,\n      List\n    },\n    data () {\n      return {\n        column1: [],\n        column2: [],\n        column3: [],\n        column4: [],\n        dIndex1: 0,\n        dIndex2: 0,\n        dIndex3: 0,\n        dIndex4: 0\n      }\n    },\n    computed: {\n      boxHeight () {\n        let itemHeight = parseInt(this.itemHeight)\n        itemHeight = itemHeight ? itemHeight : DEFTAULT_ITEM_HEIGHT\n        return itemHeight * 5\n      }\n    },\n    methods: {\n      clickMask () {\n        if (this.maskClick) {\n          this.looseBody()\n          this.$emit('update:visible', false)\n        }\n      },\n      formateData () {\n        if (this.layer > 1) {\n          this.setLinkColumn()\n        } else {\n          this.column1 = this.data[0] || []\n          this.column2 = this.data[1] || []\n          this.column3 = this.data[2] || []\n          this.column4 = this.data[3] || []\n          this.setNormalIndex()\n        }\n      },\n      setLinkColumn () {\n        if (this.layer === 2) {\n          this.setLinkLayer2()\n        } else if (this.layer === 3) {\n          this.setLinkLayer2()\n          this.setLinkLayer3()\n        } else if (this.layer === 4) {\n          this.setLinkLayer2()\n          this.setLinkLayer3()\n          this.setLinkLayer4()\n        }\n      },\n      setLinkLayer2 () {\n        const { defaultIndex } = this\n        this.column1 = this.data || []\n        if (typeof defaultIndex === 'number') {\n          this.dIndex1 = defaultIndex\n          this.dIndex2 = 0\n          if (this.data.length > 1 && this.data[0].children) {\n            this.column2 = this.data[0].children || []\n          }\n        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){\n          this.dIndex1 = defaultIndex[0] || 0\n          this.dIndex2 = defaultIndex[1] || 0\n          this.column2 = this.data[this.dIndex1].children || []\n        }\n      },\n      setLinkLayer3 () {\n        const { defaultIndex } = this\n        if (typeof defaultIndex === 'number') {\n          this.dIndex3 = 0\n          if (this.column2.length > 1 && this.column2[0].children) {\n            this.column3 = this.column2[0].children || []\n          }\n        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){\n          this.dIndex3 = defaultIndex[2] || 0\n          this.column3 = this.column2[this.dIndex2].children || []\n        }\n      },\n      setLinkLayer4 () {\n        const { defaultIndex } = this\n        if (typeof defaultIndex === 'number') {\n          this.dIndex4 = 0\n          if (this.column3.length > 1 && this.column3[0].children) {\n            this.column4 = this.column3[0].children || []\n          }\n        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){\n          this.dIndex4 = defaultIndex[3] || 0\n          this.column4 = this.column3[this.dIndex3].children || []\n        }\n      },\n      setNormalIndex () {\n        this.$nextTick(() => {\n          const { defaultIndex } = this\n          if (Array.isArray(defaultIndex)) {\n            this.setDefaultIndex()\n          } else {\n            this.dIndex1 = Number(defaultIndex) || 0\n          }\n        })\n      },\n      setDefaultIndex () {\n        const { indexArr } = this\n        const self = this\n        function next() {\n          let promise = Promise.resolve()\n          let index = 0\n          while (index < self.data.length) {\n            promise = promise.then(indexArr[index])\n            index++\n          }\n        }\n        next()\n      },\n      change (index, res) {\n        this.result[index] = res\n        this.$emit('change', this.result)\n      },\n      change1 (res) {\n        if (res) {\n          this.change(0, res)\n          if (this.layer > 1) {\n            this.dIndex2 = 0\n            this.changeLink('column2', res)\n          }\n        }\n      },\n      change2 (res) {\n        if (res) {\n          this.change(1, res)\n          if (this.layer > 2) {\n            this.dIndex3 = 0\n            this.changeLink('column3', res)\n          }\n        }\n      },\n      change3 (res) {\n        if (res) {\n          this.change(2, res)\n          if (this.layer > 3) {\n            this.dIndex4 = 0\n            this.changeLink('column4', res)\n          }\n        }\n      },\n      change4 (res) {\n        if (res) {\n          this.change(3, res)\n        }\n      },\n      changeLink (key, res) {\n        if (this.layer) {\n          clearTimeout(this.linktimer)\n          this.linktimer = setTimeout(() => {\n            this[key] = res.children || []\n          }, 100)\n        }\n      },\n      cancel () {\n        this.looseBody()\n        this.$emit('cancel')\n        this.$emit('update:visible', false)\n      },\n      confirm () {\n        this.looseBody()\n        this.$emit('confirm', this.result)\n        this.$emit('update:visible', false)\n      },\n      stopPropagation (e) {\n        e.stopPropagation()\n      },\n      fixedBody() {\n        const scrollTop = document.body.scrollTop || document.documentElement.scrollTop\n        this.prevBodyCss = document.body.style.cssText\n        document.body.style.cssText += 'position:fixed;width:100%;top:-' + scrollTop + 'px;'\n      },\n      looseBody() {\n        const body = document.body\n        const top = body.style.top\n        body.style.cssText = this.prevBodyCss\n        body.scrollTop = document.documentElement.scrollTop = -parseInt(top)\n        body.style.top = ''\n      }\n    },\n    created () {\n      this.result = []\n      this.indexArr = [\n        () => this.dIndex1 = this.defaultIndex[0] || 0,\n        () => this.dIndex2 = this.defaultIndex[1] || 0,\n        () => this.dIndex3 = this.defaultIndex[2] || 0,\n        () => this.dIndex4 = this.defaultIndex[3] || 0\n      ]\n      this.formateData()\n    },\n    mounted () {\n      this.$refs.picker.addEventListener('click', this.stopPropagation)\n    },\n    watch: {\n      visible (v) {\n        if (v) {\n          this.fixedBody()\n        }\n      },\n      defaultIndex () {\n        this.formateData()\n      }\n    },\n    beforeDestroy () {\n      this.$refs.picker.removeEventListener('click', this.stopPropagation)\n    }\n  }\n</script>\n<style lang=\"scss\" scoped>\n  .pickerbox {\n    position: fixed;\n    width: 100vw;\n    height: 100vh;\n    left: 0;\n    top: 0;\n    background: rgba(0, 0, 0, 0.7);\n    z-index: 9999;\n    overflow: hidden;\n  }\n  .fade-enter-active, .fade-leave-active {\n    transition: opacity .2s;\n  }\n  .fade-enter, .fade-leave-to {\n    opacity: 0;\n  }\n  .toup-enter-active, .toup-leave-active {\n    transition: transform .3s;\n  }\n  .toup-enter, .toup-leave-to {\n    transform: translate3d(0, 100px, 0);\n  }\n  // ----\n  .vue-picker {\n    position: absolute;\n    left: 0;\n    bottom: 0;\n    width: 100%;\n    background-color: #fff;\n    user-select: none;\n    -webkit-text-size-adjust: 100%;\n    -webkit-tap-highlight-color: transparent;\n  }\n  .content {\n    overflow: hidden;\n    height: 220px;\n    position: relative;\n    display: flex;\n  }\n  .colums {\n    display: flex;\n    overflow: hidden;\n    font-size: 16px;\n    text-align: center;\n    flex: 1;\n  }\n  .mask {\n    position: absolute;\n    top: 0;\n    left: 0;\n    z-index: 2;\n    width: 100%;\n    height: 100%;\n    background-image: linear-gradient(180deg, hsla(0, 0%, 100%, 0.9), hsla(0, 0%, 100%, 0.4)), linear-gradient(0deg, hsla(0, 0%, 100%, 0.9), hsla(0, 0%, 100%, 0.4));\n    background-repeat: no-repeat;\n    background-position: top, bottom;\n    backface-visibility: hidden;\n    pointer-events: none;\n    background-size: 100% 88px;\n  }\n  .hairline {\n    position: absolute;\n    top: 50%;\n    left: 0;\n    z-index: 3;\n    width: 100%;\n    transform: translateY(-50%);\n    pointer-events: none;\n    height: 44px;\n    &::after {\n      position: absolute;\n      box-sizing: border-box;\n      content: ' ';\n      pointer-events: none;\n      top: -50%;\n      right: -50%;\n      bottom: -50%;\n      left: -50%;\n      border: 0 solid #ebedf0;\n      -webkit-transform: scale(0.5);\n      transform: scale(0.5);\n      border-width: 1px 0;\n    }\n  }\n</style>\n",".pickerbox {\n  position: fixed;\n  width: 100vw;\n  height: 100vh;\n  left: 0;\n  top: 0;\n  background: rgba(0, 0, 0, 0.7);\n  z-index: 9999;\n  overflow: hidden;\n}\n\n.fade-enter-active, .fade-leave-active {\n  transition: opacity 0.2s;\n}\n\n.fade-enter, .fade-leave-to {\n  opacity: 0;\n}\n\n.toup-enter-active, .toup-leave-active {\n  transition: transform 0.3s;\n}\n\n.toup-enter, .toup-leave-to {\n  transform: translate3d(0, 100px, 0);\n}\n\n.vue-picker {\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  width: 100%;\n  background-color: #fff;\n  user-select: none;\n  -webkit-text-size-adjust: 100%;\n  -webkit-tap-highlight-color: transparent;\n}\n\n.content {\n  overflow: hidden;\n  height: 220px;\n  position: relative;\n  display: flex;\n}\n\n.colums {\n  display: flex;\n  overflow: hidden;\n  font-size: 16px;\n  text-align: center;\n  flex: 1;\n}\n\n.mask {\n  position: absolute;\n  top: 0;\n  left: 0;\n  z-index: 2;\n  width: 100%;\n  height: 100%;\n  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4)), linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));\n  background-repeat: no-repeat;\n  background-position: top, bottom;\n  backface-visibility: hidden;\n  pointer-events: none;\n  background-size: 100% 88px;\n}\n\n.hairline {\n  position: absolute;\n  top: 50%;\n  left: 0;\n  z-index: 3;\n  width: 100%;\n  transform: translateY(-50%);\n  pointer-events: none;\n  height: 44px;\n}\n.hairline::after {\n  position: absolute;\n  box-sizing: border-box;\n  content: \" \";\n  pointer-events: none;\n  top: -50%;\n  right: -50%;\n  bottom: -50%;\n  left: -50%;\n  border: 0 solid #ebedf0;\n  -webkit-transform: scale(0.5);\n  transform: scale(0.5);\n  border-width: 1px 0;\n}\n\n/*# sourceMappingURL=index.vue.map */"]}, media: undefined });
+    inject("data-v-5e856396_0", { source: ".pickerbox[data-v-5e856396] {\n  position: fixed;\n  width: 100vw;\n  height: 100vh;\n  left: 0;\n  top: 0;\n  background: rgba(0, 0, 0, 0.7);\n  z-index: 9999;\n  overflow: hidden;\n}\n.fade-enter-active[data-v-5e856396], .fade-leave-active[data-v-5e856396] {\n  -webkit-transition: opacity 0.2s;\n  transition: opacity 0.2s;\n}\n.fade-enter[data-v-5e856396], .fade-leave-to[data-v-5e856396] {\n  opacity: 0;\n}\n.toup-enter-active[data-v-5e856396], .toup-leave-active[data-v-5e856396] {\n  -webkit-transition: -webkit-transform 0.3s;\n  transition: -webkit-transform 0.3s;\n  transition: transform 0.3s;\n  transition: transform 0.3s, -webkit-transform 0.3s;\n}\n.toup-enter[data-v-5e856396], .toup-leave-to[data-v-5e856396] {\n  -webkit-transform: translate3d(0, 100px, 0);\n          transform: translate3d(0, 100px, 0);\n}\n.vue-picker[data-v-5e856396] {\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  width: 100%;\n  background-color: #fff;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  -webkit-text-size-adjust: 100%;\n  -webkit-tap-highlight-color: transparent;\n}\n.content[data-v-5e856396] {\n  overflow: hidden;\n  height: 220px;\n  position: relative;\n  display: -webkit-box;\n  display: flex;\n}\n.colums[data-v-5e856396] {\n  display: -webkit-box;\n  display: flex;\n  overflow: hidden;\n  font-size: 16px;\n  text-align: center;\n  -webkit-box-flex: 1;\n          flex: 1;\n}\n.mask[data-v-5e856396] {\n  position: absolute;\n  top: 0;\n  left: 0;\n  z-index: 2;\n  width: 100%;\n  height: 100%;\n  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.9)), to(rgba(255, 255, 255, 0.4))), -webkit-gradient(linear, left bottom, left top, from(rgba(255, 255, 255, 0.9)), to(rgba(255, 255, 255, 0.4)));\n  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4)), linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));\n  background-repeat: no-repeat;\n  background-position: top, bottom;\n  -webkit-backface-visibility: hidden;\n          backface-visibility: hidden;\n  pointer-events: none;\n  background-size: 100% 88px;\n}\n.hairline[data-v-5e856396] {\n  position: absolute;\n  top: 50%;\n  left: 0;\n  z-index: 3;\n  width: 100%;\n  -webkit-transform: translateY(-50%);\n          transform: translateY(-50%);\n  pointer-events: none;\n  height: 44px;\n}\n.hairline[data-v-5e856396]::after {\n  position: absolute;\n  box-sizing: border-box;\n  content: \" \";\n  pointer-events: none;\n  top: -50%;\n  right: -50%;\n  bottom: -50%;\n  left: -50%;\n  border: 0 solid #ebedf0;\n  -webkit-transform: scale(0.5);\n  transform: scale(0.5);\n  border-width: 1px 0;\n}\n\n/*# sourceMappingURL=index.vue.map */", map: {"version":3,"sources":["/Users/naice/my-project/vue-picker/src/index.vue","index.vue"],"names":[],"mappings":"AA0TA;EACA,eAAA;EACA,YAAA;EACA,aAAA;EACA,OAAA;EACA,MAAA;EACA,8BAAA;EACA,aAAA;EACA,gBAAA;ACzTA;AD2TA;EACA,gCAAA;EAAA,wBAAA;ACxTA;AD0TA;EACA,UAAA;ACvTA;ADyTA;EACA,0CAAA;EAAA,kCAAA;EAAA,0BAAA;EAAA,kDAAA;ACtTA;ADwTA;EACA,2CAAA;UAAA,mCAAA;ACrTA;ADwTA;EACA,kBAAA;EACA,OAAA;EACA,SAAA;EACA,WAAA;EACA,sBAAA;EACA,yBAAA;KAAA,sBAAA;MAAA,qBAAA;UAAA,iBAAA;EACA,8BAAA;EACA,wCAAA;ACrTA;ADuTA;EACA,gBAAA;EACA,aAAA;EACA,kBAAA;EACA,oBAAA;EAAA,aAAA;ACpTA;ADsTA;EACA,oBAAA;EAAA,aAAA;EACA,gBAAA;EACA,eAAA;EACA,kBAAA;EACA,mBAAA;UAAA,OAAA;ACnTA;ADqTA;EACA,kBAAA;EACA,MAAA;EACA,OAAA;EACA,UAAA;EACA,WAAA;EACA,YAAA;EACA,8OAAA;EAAA,wKAAA;EACA,4BAAA;EACA,gCAAA;EACA,mCAAA;UAAA,2BAAA;EACA,oBAAA;EACA,0BAAA;AClTA;ADoTA;EACA,kBAAA;EACA,QAAA;EACA,OAAA;EACA,UAAA;EACA,WAAA;EACA,mCAAA;UAAA,2BAAA;EACA,oBAAA;EACA,YAAA;ACjTA;ADkTA;EACA,kBAAA;EACA,sBAAA;EACA,YAAA;EACA,oBAAA;EACA,SAAA;EACA,WAAA;EACA,YAAA;EACA,UAAA;EACA,uBAAA;EACA,6BAAA;EACA,qBAAA;EACA,mBAAA;AChTA;;AAEA,oCAAoC","file":"index.vue","sourcesContent":["<template>\n  <transition name=\"fade\">\n    <div class=\"pickerbox\" v-show=\"visible\" @click=\"clickMask\">\n      <transition name=\"toup\">\n        <div class=\"vue-picker\" ref=\"picker\" v-show=\"visible\">\n          <Header v-if=\"showToolbar\"\n            :cancelText=\"cancelText\"\n            :confirmText=\"confirmText\"\n            :title=\"title\"\n            @cancel=\"cancel\"\n            @confirm=\"confirm\" />\n          <div class=\"content\" :style=\"{height: boxHeight + 'px'}\">\n            <div class=\"colums\">\n              <List :column=\"column1\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex1\"\n                @change=\"change1\" />\n              <List v-if=\"column2.length > 0\"\n                :column=\"column2\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex2\"\n                @change=\"change2\" />\n              <List v-if=\"column3.length > 0\"\n                :column=\"column3\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex3\"\n                @change=\"change3\" />\n              <List v-if=\"column4.length > 0\"\n                :column=\"column4\"\n                :boxHeight=\"boxHeight\"\n                :itemHeight=\"itemHeight\"\n                :defaultIndex=\"dIndex4\"\n                @change=\"change4\" />\n            </div>\n            <div class=\"mask\"></div>\n            <div class=\"hairline\"></div>\n          </div>\n        </div>\n      </transition>\n    </div>\n  </transition>\n</template>\n<script>\n  import Header from './header.vue'\n  import List from './list.vue'\n  import { DEFTAULT_ITEM_HEIGHT } from './utils.js'\n  export default {\n    name: 'VuePicker',\n    props: {\n      visible: {\n        type: Boolean,\n        default: false\n      },\n      data: {\n        type: Array,\n        default: () => []\n      },\n      layer: {\n        type: Number,\n        default: 0\n      },\n      itemHeight: {\n        type: [Number, String],\n        default: DEFTAULT_ITEM_HEIGHT\n      },\n      defaultIndex: {\n        type: [Number, Array],\n        default: 0\n      },\n      cancelText: {\n        type: String,\n        default: '取消'\n      },\n      confirmText: {\n        type: String,\n        default: '确认'\n      },\n      title: {\n        type: String,\n        default: ''\n      },\n      showToolbar: {\n        type: Boolean,\n        default: false\n      },\n      maskClick: {\n        type: Boolean,\n        default: false\n      },\n      rowNumber: {\n        type: Number,\n        default: 5\n      }\n    },\n    components: {\n      Header,\n      List\n    },\n    data () {\n      return {\n        column1: [],\n        column2: [],\n        column3: [],\n        column4: [],\n        dIndex1: 0,\n        dIndex2: 0,\n        dIndex3: 0,\n        dIndex4: 0\n      }\n    },\n    computed: {\n      boxHeight () {\n        let itemHeight = parseInt(this.itemHeight)\n        itemHeight = itemHeight ? itemHeight : DEFTAULT_ITEM_HEIGHT\n        return itemHeight * this.getRowNumber\n      },\n      getRowNumber () {\n        return this.rowNumber % 2 === 0 ? this.rowNumber + 1 : this.rowNumber\n      }\n    },\n    methods: {\n      clickMask () {\n        if (this.maskClick) {\n          this.looseBody()\n          this.$emit('update:visible', false)\n        }\n      },\n      formateData () {\n        if (this.layer > 1) {\n          this.setLinkColumn()\n        } else {\n          this.column1 = this.data[0] || []\n          this.column2 = this.data[1] || []\n          this.column3 = this.data[2] || []\n          this.column4 = this.data[3] || []\n          this.setNormalIndex()\n        }\n      },\n      setLinkColumn () {\n        if (this.layer === 2) {\n          this.setLinkLayer2()\n        } else if (this.layer === 3) {\n          this.setLinkLayer2()\n          this.setLinkLayer3()\n        } else if (this.layer === 4) {\n          this.setLinkLayer2()\n          this.setLinkLayer3()\n          this.setLinkLayer4()\n        }\n      },\n      setLinkLayer2 () {\n        const { defaultIndex } = this\n        this.column1 = this.data || []\n        if (typeof defaultIndex === 'number') {\n          this.dIndex1 = defaultIndex\n          this.dIndex2 = 0\n          if (this.data.length > 1 && this.data[0].children) {\n            this.column2 = this.data[0].children || []\n          }\n        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){\n          this.dIndex1 = defaultIndex[0] || 0\n          this.dIndex2 = defaultIndex[1] || 0\n          this.column2 = this.data[this.dIndex1].children || []\n        }\n      },\n      setLinkLayer3 () {\n        const { defaultIndex } = this\n        if (typeof defaultIndex === 'number') {\n          this.dIndex3 = 0\n          if (this.column2.length > 1 && this.column2[0].children) {\n            this.column3 = this.column2[0].children || []\n          }\n        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){\n          this.dIndex3 = defaultIndex[2] || 0\n          this.column3 = this.column2[this.dIndex2].children || []\n        }\n      },\n      setLinkLayer4 () {\n        const { defaultIndex } = this\n        if (typeof defaultIndex === 'number') {\n          this.dIndex4 = 0\n          if (this.column3.length > 1 && this.column3[0].children) {\n            this.column4 = this.column3[0].children || []\n          }\n        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){\n          this.dIndex4 = defaultIndex[3] || 0\n          this.column4 = this.column3[this.dIndex3].children || []\n        }\n      },\n      setNormalIndex () {\n        this.$nextTick(() => {\n          const { defaultIndex } = this\n          if (Array.isArray(defaultIndex)) {\n            this.setDefaultIndex()\n          } else {\n            this.dIndex1 = Number(defaultIndex) || 0\n          }\n        })\n      },\n      setDefaultIndex () {\n        const { indexArr } = this\n        const self = this\n        function next() {\n          let promise = Promise.resolve()\n          let index = 0\n          while (index < self.data.length) {\n            promise = promise.then(indexArr[index])\n            index++\n          }\n        }\n        next()\n      },\n      change (index, res) {\n        this.result[index] = res\n        this.$emit('change', this.result)\n      },\n      change1 (res) {\n        if (res) {\n          this.change(0, res)\n          if (this.layer > 1) {\n            this.dIndex2 = 0\n            this.changeLink('column2', res)\n          }\n        }\n      },\n      change2 (res) {\n        if (res) {\n          this.change(1, res)\n          if (this.layer > 2) {\n            this.dIndex3 = 0\n            this.changeLink('column3', res)\n          }\n        }\n      },\n      change3 (res) {\n        if (res) {\n          this.change(2, res)\n          if (this.layer > 3) {\n            this.dIndex4 = 0\n            this.changeLink('column4', res)\n          }\n        }\n      },\n      change4 (res) {\n        if (res) {\n          this.change(3, res)\n        }\n      },\n      changeLink (key, res) {\n        if (this.layer) {\n          clearTimeout(this.linktimer)\n          this.linktimer = setTimeout(() => {\n            this[key] = res.children || []\n          }, 100)\n        }\n      },\n      cancel () {\n        this.looseBody()\n        this.$emit('cancel')\n        this.$emit('update:visible', false)\n      },\n      confirm () {\n        this.looseBody()\n        this.$emit('confirm', this.result)\n        this.$emit('update:visible', false)\n      },\n      stopPropagation (e) {\n        e.stopPropagation()\n      },\n      fixedBody() {\n        const scrollTop = document.body.scrollTop || document.documentElement.scrollTop\n        this.prevBodyCss = document.body.style.cssText\n        document.body.style.cssText += 'position:fixed;width:100%;top:-' + scrollTop + 'px;'\n      },\n      looseBody() {\n        const body = document.body\n        const top = body.style.top\n        body.style.cssText = this.prevBodyCss\n        body.scrollTop = document.documentElement.scrollTop = -parseInt(top)\n        body.style.top = ''\n      }\n    },\n    created () {\n      this.result = []\n      this.indexArr = [\n        () => this.dIndex1 = this.defaultIndex[0] || 0,\n        () => this.dIndex2 = this.defaultIndex[1] || 0,\n        () => this.dIndex3 = this.defaultIndex[2] || 0,\n        () => this.dIndex4 = this.defaultIndex[3] || 0\n      ]\n      this.formateData()\n    },\n    mounted () {\n      this.$refs.picker.addEventListener('click', this.stopPropagation)\n    },\n    watch: {\n      visible (v) {\n        if (v) {\n          this.fixedBody()\n        }\n      },\n      defaultIndex () {\n        this.formateData()\n      }\n    },\n    beforeDestroy () {\n      this.$refs.picker.removeEventListener('click', this.stopPropagation)\n    }\n  }\n</script>\n<style lang=\"scss\" scoped>\n  .pickerbox {\n    position: fixed;\n    width: 100vw;\n    height: 100vh;\n    left: 0;\n    top: 0;\n    background: rgba(0, 0, 0, 0.7);\n    z-index: 9999;\n    overflow: hidden;\n  }\n  .fade-enter-active, .fade-leave-active {\n    transition: opacity .2s;\n  }\n  .fade-enter, .fade-leave-to {\n    opacity: 0;\n  }\n  .toup-enter-active, .toup-leave-active {\n    transition: transform .3s;\n  }\n  .toup-enter, .toup-leave-to {\n    transform: translate3d(0, 100px, 0);\n  }\n  // ----\n  .vue-picker {\n    position: absolute;\n    left: 0;\n    bottom: 0;\n    width: 100%;\n    background-color: #fff;\n    user-select: none;\n    -webkit-text-size-adjust: 100%;\n    -webkit-tap-highlight-color: transparent;\n  }\n  .content {\n    overflow: hidden;\n    height: 220px;\n    position: relative;\n    display: flex;\n  }\n  .colums {\n    display: flex;\n    overflow: hidden;\n    font-size: 16px;\n    text-align: center;\n    flex: 1;\n  }\n  .mask {\n    position: absolute;\n    top: 0;\n    left: 0;\n    z-index: 2;\n    width: 100%;\n    height: 100%;\n    background-image: linear-gradient(180deg, hsla(0, 0%, 100%, 0.9), hsla(0, 0%, 100%, 0.4)), linear-gradient(0deg, hsla(0, 0%, 100%, 0.9), hsla(0, 0%, 100%, 0.4));\n    background-repeat: no-repeat;\n    background-position: top, bottom;\n    backface-visibility: hidden;\n    pointer-events: none;\n    background-size: 100% 88px;\n  }\n  .hairline {\n    position: absolute;\n    top: 50%;\n    left: 0;\n    z-index: 3;\n    width: 100%;\n    transform: translateY(-50%);\n    pointer-events: none;\n    height: 44px;\n    &::after {\n      position: absolute;\n      box-sizing: border-box;\n      content: ' ';\n      pointer-events: none;\n      top: -50%;\n      right: -50%;\n      bottom: -50%;\n      left: -50%;\n      border: 0 solid #ebedf0;\n      -webkit-transform: scale(0.5);\n      transform: scale(0.5);\n      border-width: 1px 0;\n    }\n  }\n</style>\n",".pickerbox {\n  position: fixed;\n  width: 100vw;\n  height: 100vh;\n  left: 0;\n  top: 0;\n  background: rgba(0, 0, 0, 0.7);\n  z-index: 9999;\n  overflow: hidden;\n}\n\n.fade-enter-active, .fade-leave-active {\n  transition: opacity 0.2s;\n}\n\n.fade-enter, .fade-leave-to {\n  opacity: 0;\n}\n\n.toup-enter-active, .toup-leave-active {\n  transition: transform 0.3s;\n}\n\n.toup-enter, .toup-leave-to {\n  transform: translate3d(0, 100px, 0);\n}\n\n.vue-picker {\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  width: 100%;\n  background-color: #fff;\n  user-select: none;\n  -webkit-text-size-adjust: 100%;\n  -webkit-tap-highlight-color: transparent;\n}\n\n.content {\n  overflow: hidden;\n  height: 220px;\n  position: relative;\n  display: flex;\n}\n\n.colums {\n  display: flex;\n  overflow: hidden;\n  font-size: 16px;\n  text-align: center;\n  flex: 1;\n}\n\n.mask {\n  position: absolute;\n  top: 0;\n  left: 0;\n  z-index: 2;\n  width: 100%;\n  height: 100%;\n  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4)), linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));\n  background-repeat: no-repeat;\n  background-position: top, bottom;\n  backface-visibility: hidden;\n  pointer-events: none;\n  background-size: 100% 88px;\n}\n\n.hairline {\n  position: absolute;\n  top: 50%;\n  left: 0;\n  z-index: 3;\n  width: 100%;\n  transform: translateY(-50%);\n  pointer-events: none;\n  height: 44px;\n}\n.hairline::after {\n  position: absolute;\n  box-sizing: border-box;\n  content: \" \";\n  pointer-events: none;\n  top: -50%;\n  right: -50%;\n  bottom: -50%;\n  left: -50%;\n  border: 0 solid #ebedf0;\n  -webkit-transform: scale(0.5);\n  transform: scale(0.5);\n  border-width: 1px 0;\n}\n\n/*# sourceMappingURL=index.vue.map */"]}, media: undefined });
 
   };
   /* scoped */
-  const __vue_scope_id__$2 = "data-v-59f1f4fb";
+  const __vue_scope_id__$2 = "data-v-5e856396";
   /* module identifier */
   const __vue_module_identifier__$2 = undefined;
   /* functional template */
