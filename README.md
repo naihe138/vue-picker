@@ -1,7 +1,7 @@
 中文 | [English](https://github.com/naihe138/vue-picker/blob/master/README-en.md)
 
 
-`vue-picker`的组件，囊括了（`普通选择`、`联动选择`、`中国地址选择`）等等常见的picker，简单配置就可以出现一个强大的picker，感受下效果图。
+`vue-picker`的组件，囊括了（`普通选择`、`联动选择`、`中国地址选择`）等等常见的picker，兼容PC、移动端，通过简单配置就可以出现一个强大的picker，感受下效果图。
 
 
 ![vue-pick.gif][1]
