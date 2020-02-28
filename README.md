@@ -19,6 +19,8 @@
 
 #### 使用
 
+> 普通网页开发直接复制lib/vue-picker.js文件夹到项目即可直接使用
+
 ````javascript
 <template>
   <div>
