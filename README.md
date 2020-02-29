@@ -78,7 +78,6 @@
 visible | 显示/隐藏picker | 是 | Boolean | false
 data | pickerData，多列[data1, data2]  | 是 | Array | []
 layer | 联动显示列数  | 否 | Number | 0
-link | 是否开启联动数据  | 否 | Boolean | false
 defaultIndex | 默认显示的index  | 否 | Number/Array(多列用数组) | 无
 cancelText | 取消按钮文字  | 否 | String | '取消'
 confirmText | 去确认按钮文字  | 否 | String | '确认'
