@@ -15,27 +15,31 @@
                 :boxHeight="boxHeight"
                 :itemHeight="itemHeight"
                 :defaultIndex="dIndex1"
+                :rowNumber="getRowNumber"
                 @change="change1" />
               <List v-if="column2.length > 0"
                 :column="column2"
                 :boxHeight="boxHeight"
                 :itemHeight="itemHeight"
                 :defaultIndex="dIndex2"
+                :rowNumber="getRowNumber"
                 @change="change2" />
               <List v-if="column3.length > 0"
                 :column="column3"
                 :boxHeight="boxHeight"
                 :itemHeight="itemHeight"
                 :defaultIndex="dIndex3"
+                :rowNumber="getRowNumber"
                 @change="change3" />
               <List v-if="column4.length > 0"
                 :column="column4"
                 :boxHeight="boxHeight"
                 :itemHeight="itemHeight"
                 :defaultIndex="dIndex4"
+                :rowNumber="getRowNumber"
                 @change="change4" />
             </div>
-            <div class="mask"></div>
+            <div class="mask" :style="maskStyle"></div>
             <div class="hairline"></div>
           </div>
         </div>
@@ -118,7 +122,17 @@
         return itemHeight * this.getRowNumber
       },
       getRowNumber () {
+        if (this.rowNumber < 3) {
+          return 3
+        }
         return this.rowNumber % 2 === 0 ? this.rowNumber + 1 : this.rowNumber
+      },
+      maskStyle() {
+        let style = { backgroundSize: '100% 88px' }
+        if (this.getRowNumber === 3) {
+          style = { backgroundSize: '100% 44px' }
+        }
+        return style
       }
     },
     methods: {

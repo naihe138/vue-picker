@@ -26,7 +26,8 @@
         default: () => ([])
       },
       boxHeight: Number,
-      itemHeight: Number
+      itemHeight: Number,
+      rowNumber: Number
     },
     data() {
       return {
@@ -41,6 +42,9 @@
     computed: {
       count() {
         return this.column.length
+      },
+      getRoNumber() {
+        return Math.floor(this.rowNumber / 2)
       }
     },
     methods: {
@@ -118,13 +122,13 @@
           this.startTop = index * this.itemHeight
           if (this.startTop > this.bottom) {
             this.startTop = this.bottom - this.itemHeight
-            index = -2
+            index = -this.getRoNumber
           } else if (this.startTop < this.top) {
             this.startTop = this.top + this.itemHeight
             index = this.count + 1
           }
           this.ulStyle.transform = `translate3d(0px, ${this.startTop}px, 0px)`
-          index = 2 - index
+          index = this.getRoNumber - index
           if (this.selectIndex !== index) {
             this.selectIndex = index
             this.change()
