@@ -295,17 +295,20 @@
         body.style.cssText = this.prevBodyCss
         body.scrollTop = document.documentElement.scrollTop = -parseInt(top)
         body.style.top = ''
+      },
+      init() {
+        this.result = []
+        this.indexArr = [
+          () => this.dIndex1 = this.defaultIndex[0] || 0,
+          () => this.dIndex2 = this.defaultIndex[1] || 0,
+          () => this.dIndex3 = this.defaultIndex[2] || 0,
+          () => this.dIndex4 = this.defaultIndex[3] || 0
+        ]
+        this.formateData()
       }
     },
     created () {
-      this.result = []
-      this.indexArr = [
-        () => this.dIndex1 = this.defaultIndex[0] || 0,
-        () => this.dIndex2 = this.defaultIndex[1] || 0,
-        () => this.dIndex3 = this.defaultIndex[2] || 0,
-        () => this.dIndex4 = this.defaultIndex[3] || 0
-      ]
-      this.formateData()
+      this.init()
     },
     mounted () {
       this.$refs.picker.addEventListener('click', this.stopPropagation)
@@ -317,7 +320,10 @@
         }
       },
       defaultIndex () {
-        this.formateData()
+        this.init()
+      },
+      data() {
+        this.init()
       }
     },
     beforeDestroy () {
