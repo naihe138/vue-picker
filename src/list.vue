@@ -81,9 +81,9 @@
         e.stopPropagation()
         this.disY = getClient(e).y - this.startY
         this.startY = getClient(e).y
-        if (this.startTop > this.bottom) {
+        if (this.startTop >= this.bottom) {
           this.startTop = this.bottom
-        } else if (this.startTop < this.top) {
+        } else if (this.startTop <= this.top) {
           this.startTop = this.top
         } else {
           this.startTop += this.disY

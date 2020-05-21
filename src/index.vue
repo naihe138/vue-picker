@@ -176,8 +176,14 @@
           }
         } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){
           this.dIndex1 = defaultIndex[0] || 0
-          this.dIndex2 = defaultIndex[1] || 0
           this.column2 = this.data[this.dIndex1].children || []
+          this.$nextTick(() => {
+            if (this.column2.length - 1 < defaultIndex[1]) {
+              this.dIndex2 = this.column2.length - 1
+            } else {
+              this.dIndex2 = defaultIndex[1] || 0
+            }
+          })
         }
       },
       setLinkLayer3 () {
@@ -187,9 +193,17 @@
           if (this.column2.length > 1 && this.column2[0].children) {
             this.column3 = this.column2[0].children || []
           }
-        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){
-          this.dIndex3 = defaultIndex[2] || 0
-          this.column3 = this.column2[this.dIndex2].children || []
+        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 1){
+          this.$nextTick(() => {
+            this.column3 = this.column2[this.dIndex2].children || []
+            this.$nextTick(() => {
+              if (this.column3.length - 1 < defaultIndex[2]) {
+                this.dIndex3 = this.column3.length - 1
+              } else {
+                this.dIndex3 = defaultIndex[2] || 0
+              }
+            })
+          })
         }
       },
       setLinkLayer4 () {
@@ -199,9 +213,17 @@
           if (this.column3.length > 1 && this.column3[0].children) {
             this.column4 = this.column3[0].children || []
           }
-        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 0){
-          this.dIndex4 = defaultIndex[3] || 0
-          this.column4 = this.column3[this.dIndex3].children || []
+        } else if (Array.isArray(defaultIndex) && defaultIndex.length > 2){
+          setTimeout(() => {
+            this.column4 = this.column3[this.dIndex3].children || []
+            this.$nextTick(() => {
+              if (this.column4.length - 1 < defaultIndex[3]) {
+                this.dIndex4 = this.column4.length - 1
+              } else {
+                this.dIndex4 = defaultIndex[3] || 0
+              }
+            })
+          })
         }
       },
       setNormalIndex () {
