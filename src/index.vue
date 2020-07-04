@@ -97,6 +97,10 @@
       rowNumber: {
         type: Number,
         default: 5
+      },
+      appendToBody: {
+        type: Boolean,
+        default: false
       }
     },
     components: {
@@ -334,6 +338,9 @@
     },
     mounted () {
       this.$refs.picker.addEventListener('click', this.stopPropagation)
+      if (this.appendToBody) {
+        document.body.appendChild(this.$el)
+      }
     },
     watch: {
       visible (v) {
@@ -359,7 +366,7 @@
     width: 100vw;
     height: 100vh;
     left: 0;
-    top: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.7);
     z-index: 9999;
     overflow: hidden;
