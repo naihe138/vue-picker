@@ -81,7 +81,7 @@ showToolbar | show toolbar  | no | Boolean | false
 maskClick | click mask  | no | Boolean | false
 itemHeight | height of each row | no | Number, String | '44px'
 rowNumber | how many lines to display (singular number recommended) | no | Number | 5
-
+appendToBody | Insert into body | no | Boolean | false
 
 ## Events
 

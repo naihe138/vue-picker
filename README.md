@@ -86,6 +86,7 @@ showToolbar | 显示头部  | 否 | Boolean | false
 maskClick | 遮罩层是否可以点击关闭  | 否 | Boolean | false
 itemHeight | 每一行的高度 | 否 | Number, String | '44px'
 rowNumber | 显示多少行(建议单数) | 否 | Number | 5
+appendToBody | 是否插入到body中 | 否 | Boolean | false
 
 ## 事件说明
 
