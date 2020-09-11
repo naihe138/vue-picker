@@ -294,7 +294,7 @@
           // clearTimeout(this.linktimer)
           this.linktimer = setTimeout(() => {
             this[key] = res.children || []
-          }, 100)
+          }, 1000 / 60)
         }
       },
       cancel () {
