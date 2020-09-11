@@ -291,7 +291,7 @@
       },
       changeLink (key, res) {
         if (this.layer) {
-          clearTimeout(this.linktimer)
+          // clearTimeout(this.linktimer)
           this.linktimer = setTimeout(() => {
             this[key] = res.children || []
           }, 100)
