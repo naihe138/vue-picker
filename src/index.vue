@@ -393,6 +393,7 @@
     user-select: none;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    display: block;
   }
   .content {
     overflow: hidden;
