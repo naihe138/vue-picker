@@ -1,6 +1,6 @@
 {
   "name": "vue-pickers",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "description": "A picker componemt for vue2.0",
   "main": "index.js",
   "scripts": {
