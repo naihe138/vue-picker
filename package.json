@@ -1,6 +1,6 @@
 {
   "name": "vue-pickers",
-  "version": "2.5.4",
+  "version": "3.0.0",
   "files": [
     "dist"
   ],
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "postcss-scss": "^4.0.4",
-    "vue": "^3.2.25"
+    "vue": "^3.2.36"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.0.2",
